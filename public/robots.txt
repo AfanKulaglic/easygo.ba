@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /migrate
+Disallow: /auth/
+Disallow: /checkout/
+Disallow: /settings
+
+Sitemap: https://easygo.ba/sitemap.xml
