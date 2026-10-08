@@ -467,8 +467,9 @@ export default function AdminPage() {
 
   const handleSaveBanner = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isValidMediaUrl(bannerForm.image)) {
-      alert('Slika banera mora biti URL (http, https ili /putanja).')
+    const imageUrl = bannerForm.image.trim()
+    if (!/^https?:\/\//i.test(imageUrl)) {
+      alert('Slika banera mora biti LINK (http:// ili https://), isti princip kao slike proizvoda.')
       return
     }
     setSavingBanner(true)
@@ -476,7 +477,7 @@ export default function AdminPage() {
       // Prazan string (ne `undefined`) — da se link zaista obriše iz baze.
       // `undefined` bi deepCleanUndefined izbacio i stara vrijednost bi ostala.
       const payload = {
-        image: bannerForm.image.trim(),
+        image: imageUrl,
         link: bannerForm.link.trim(),
         active: bannerForm.active
       }
@@ -1692,7 +1693,9 @@ export default function AdminPage() {
                   <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
                   <p className="text-[11px] leading-relaxed text-amber-300/90">
                     Preporučena dimenzija slike banera je <span className="font-semibold">1216×208 px</span> (odnos ~5,85:1), a za retina ekrane{' '}
-                    <span className="font-semibold">2432×416 px</span>. Slika se razvlači da popuni karticu i nikada se ne reže, pa pri drugačijem odnosu dolazi do izobličenja.
+                    <span className="font-semibold">2432×416 px</span>. Preporučeni format je <span className="font-semibold">webp</span> ili{' '}
+                    <span className="font-semibold">jpg</span> (kao slike proizvoda). Slika se razvlači da popuni karticu i nikada se ne reže,
+                    pa pri drugačijem odnosu dolazi do izobličenja.
                   </p>
                 </div>
 
@@ -1710,15 +1713,16 @@ export default function AdminPage() {
                       </div>
                       <div className="flex-1 space-y-3">
                         <div>
-                          <label className="block text-sm text-muted mb-1.5">Slika banera (URL ili /putanja) *</label>
+                          <label className="block text-sm text-muted mb-1.5">Slika banera (link) *</label>
                           <input
-                            type="text"
+                            type="url"
                             value={bannerForm.image}
                             onChange={e => setBannerForm({ ...bannerForm, image: e.target.value })}
-                            placeholder="https://example.com/baner.webp"
+                            placeholder="https://.../baner.webp"
                             className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-primary"
                             required
                           />
+                          <p className="text-[11px] text-muted mt-1.5">Zalijepi direktan link do slike (https://…), isti princip kao slike proizvoda — preporučeno webp ili jpg.</p>
                         </div>
                         <div>
                           <label className="block text-sm text-muted mb-1.5">Link (opciono)</label>
