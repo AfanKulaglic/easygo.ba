@@ -15,11 +15,12 @@ import {
   addSubcategory, updateSubcategory, deleteSubcategory,
   markMessageAsRead, deleteMessage, replyToMessage,
   updateOrder, markOrderAsSeen, deleteOrder,
+  Banner, subscribeToBanners, addBanner, updateBanner, deleteBanner,
   generateSlug
 } from '@/lib/realtimeProducts'
 import { categories as localCategories } from '@/lib/productData'
 
-type Tab = 'orders' | 'analytics' | 'products' | 'categories' | 'messages'
+type Tab = 'orders' | 'analytics' | 'products' | 'categories' | 'messages' | 'banners'
 
 // Helper to convert timestamp (number or Firestore Timestamp) to Date
 const toDate = (timestamp: number | { toDate?: () => Date } | undefined): Date | null => {
@@ -103,6 +104,13 @@ export default function AdminPage() {
   const [productSearch, setProductSearch] = useState('')
   const [orderSearch, setOrderSearch] = useState('')
 
+  // Baneri (reklamni baner na početnoj)
+  const [banners, setBanners] = useState<Banner[]>([])
+  const [editingBanner, setEditingBanner] = useState<Banner | null>(null)
+  const [showBannerForm, setShowBannerForm] = useState(false)
+  const [savingBanner, setSavingBanner] = useState(false)
+  const [bannerForm, setBannerForm] = useState({ image: '', link: '', active: true })
+
   // Handle login
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
@@ -172,6 +180,7 @@ export default function AdminPage() {
       })
     })
     const unsubViews = subscribeToProductViews(setProductViews)
+    const unsubBanners = subscribeToBanners(setBanners)
     setLoading(false)
     
     return () => {
@@ -181,6 +190,7 @@ export default function AdminPage() {
       unsubMessages()
       unsubOrders()
       unsubViews()
+      unsubBanners()
     }
   }, [isAuthenticated])
 
@@ -442,10 +452,61 @@ export default function AdminPage() {
     setReplyText('')
   }
 
+  // --- Baneri ---
+  const openNewBanner = () => {
+    setEditingBanner(null)
+    setBannerForm({ image: '', link: '', active: true })
+    setShowBannerForm(true)
+  }
+
+  const openEditBanner = (banner: Banner) => {
+    setEditingBanner(banner)
+    setBannerForm({ image: banner.image, link: banner.link || '', active: banner.active ?? true })
+    setShowBannerForm(true)
+  }
+
+  const handleSaveBanner = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isValidMediaUrl(bannerForm.image)) {
+      alert('Slika banera mora biti URL (http, https ili /putanja).')
+      return
+    }
+    setSavingBanner(true)
+    try {
+      // Prazan string (ne `undefined`) — da se link zaista obriše iz baze.
+      // `undefined` bi deepCleanUndefined izbacio i stara vrijednost bi ostala.
+      const payload = {
+        image: bannerForm.image.trim(),
+        link: bannerForm.link.trim(),
+        active: bannerForm.active
+      }
+      if (editingBanner?.id) {
+        await updateBanner(editingBanner.id, payload)
+      } else {
+        await addBanner(payload)
+      }
+      setShowBannerForm(false)
+      setEditingBanner(null)
+      setBannerForm({ image: '', link: '', active: true })
+    } catch (error) {
+      console.error('Banner save failed:', error)
+      alert('Greška pri snimanju banera.')
+    } finally {
+      setSavingBanner(false)
+    }
+  }
+
+  const handleDeleteBanner = async (id: string) => {
+    if (confirm('Jeste li sigurni da želite obrisati ovaj baner?')) {
+      await deleteBanner(id)
+    }
+  }
+
   const tabs = [
     { id: 'orders' as Tab, label: 'Narudžbe', icon: ShoppingBag, count: newOrdersCount },
     { id: 'products' as Tab, label: 'Proizvodi', icon: Package, count: products.length },
     { id: 'categories' as Tab, label: 'Kategorije', icon: FolderOpen, count: categories.length },
+    { id: 'banners' as Tab, label: 'Baneri', icon: Layers, count: banners.length },
     { id: 'messages' as Tab, label: 'Poruke', icon: MessageSquare, count: unreadCount },
     { id: 'analytics' as Tab, label: 'Statistika', icon: BarChart3, count: 0 },
   ]
@@ -1606,6 +1667,147 @@ export default function AdminPage() {
 
                 {/* Product Views Analytics */}
                 <ProductViewsAnalytics productViews={productViews} products={products} />
+              </div>
+            )}
+
+            {/* Banners Tab */}
+            {activeTab === 'banners' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-text">🖼 Baneri</h2>
+                    <p className="text-[11px] text-muted mt-0.5">Reklamni baner na početnoj strani</p>
+                  </div>
+                  <button
+                    onClick={openNewBanner}
+                    className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white px-3 lg:px-5 py-2 lg:py-2.5 rounded-xl transition-colors shadow-lg shadow-primary/25 text-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden sm:inline">Dodaj</span>
+                  </button>
+                </div>
+
+                {/* Upozorenje o dimenzijama */}
+                <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
+                  <p className="text-[11px] leading-relaxed text-amber-300/90">
+                    Preporučena dimenzija slike banera je <span className="font-semibold">1216×208 px</span> (odnos ~5,85:1), a za retina ekrane{' '}
+                    <span className="font-semibold">2432×416 px</span>. Slika se razvlači da popuni karticu i nikada se ne reže, pa pri drugačijem odnosu dolazi do izobličenja.
+                  </p>
+                </div>
+
+                {/* Forma */}
+                {showBannerForm && (
+                  <form onSubmit={handleSaveBanner} className="bg-surface rounded-2xl border border-white/5 p-4 space-y-4">
+                    <h3 className="text-sm font-semibold text-text">{editingBanner ? 'Uredi baner' : 'Novi baner'}</h3>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="w-full sm:w-44 h-24 bg-background rounded-xl overflow-hidden border border-white/10 flex items-center justify-center shrink-0">
+                        {isValidMediaUrl(bannerForm.image) ? (
+                          <img src={bannerForm.image} alt="Preview" className="w-full h-full object-fill" />
+                        ) : (
+                          <span className="text-xs text-muted">Nema slike</span>
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <label className="block text-sm text-muted mb-1.5">Slika banera (URL ili /putanja) *</label>
+                          <input
+                            type="text"
+                            value={bannerForm.image}
+                            onChange={e => setBannerForm({ ...bannerForm, image: e.target.value })}
+                            placeholder="https://example.com/baner.webp"
+                            className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-primary"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-muted mb-1.5">Link (opciono)</label>
+                          <input
+                            type="text"
+                            value={bannerForm.link}
+                            onChange={e => setBannerForm({ ...bannerForm, link: e.target.value })}
+                            placeholder="/products/category/rasprodaja ili https://..."
+                            className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-primary"
+                          />
+                          <p className="text-[11px] text-muted mt-1.5">Ostavi prazno da baner ne bude klikabilan.</p>
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={bannerForm.active}
+                            onChange={e => setBannerForm({ ...bannerForm, active: e.target.checked })}
+                            className="w-4 h-4 rounded accent-[var(--primary)] cursor-pointer"
+                          />
+                          <span className="text-sm text-text">Prikaži na početnoj</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <button
+                        type="button"
+                        onClick={() => { setShowBannerForm(false); setEditingBanner(null) }}
+                        className="px-4 py-2 rounded-xl border border-white/10 text-text hover:bg-white/5 transition-colors text-sm"
+                      >
+                        Odustani
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={savingBanner}
+                        className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white transition-colors text-sm disabled:opacity-50"
+                      >
+                        {savingBanner ? 'Spremanje...' : 'Spremi'}
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* Lista banera */}
+                {banners.length === 0 ? (
+                  <div className="text-center py-12 bg-surface rounded-2xl border border-white/5">
+                    <Layers className="w-12 h-12 text-muted mx-auto mb-3" />
+                    <p className="text-sm text-muted mb-4">Nema banera</p>
+                    <button
+                      onClick={openNewBanner}
+                      className="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-xl transition-colors text-sm"
+                    >
+                      Dodaj prvi baner
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3">
+                    {banners.map(banner => (
+                      <div key={banner.id} className="bg-surface rounded-2xl border border-white/5 p-3 flex flex-col sm:flex-row gap-3">
+                        <div className="w-full sm:w-48 h-24 bg-background rounded-xl overflow-hidden shrink-0">
+                          <img src={banner.image} alt="Baner" className="w-full h-full object-fill" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full ${banner.active ? 'bg-accent/20 text-accent' : 'bg-white/10 text-muted'}`}>
+                            {banner.active ? 'Aktivno' : 'Neaktivno'}
+                          </span>
+                          <p className="text-xs text-muted truncate mt-2">
+                            {banner.link ? `Link: ${banner.link}` : 'Bez linka (nije klikabilno)'}
+                          </p>
+                          <div className="flex gap-2 mt-3">
+                            <button
+                              onClick={() => openEditBanner(banner)}
+                              className="p-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors"
+                              title="Uredi"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => banner.id && handleDeleteBanner(banner.id)}
+                              className="p-2 bg-danger/10 hover:bg-danger/20 text-danger rounded-lg transition-colors"
+                              title="Obriši"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

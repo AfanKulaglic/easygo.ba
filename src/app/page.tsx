@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import HeroBanner from '@/components/HeroBanner'
 import CategoryGrid from '@/components/CategoryGrid'
@@ -11,13 +11,24 @@ import WeeklyBestSellers from '@/components/WeeklyBestSellers'
 import TrustBadges from '@/components/TrustBadges'
 import FeaturedProducts from '@/components/FeaturedProducts'
 import { trackPageView } from '@/lib/cookieManager'
+import { subscribeToBanners, Banner } from '@/lib/realtimeProducts'
 
 // Only DarkModeToggle needs dynamic import (client-only, no SSR)
 const DarkModeToggle = dynamic(() => import('@/components/DarkModeToggle'), { ssr: false })
 
 export default function Home() {
+  const [promoBanner, setPromoBanner] = useState<Banner | null>(null)
+
   useEffect(() => {
     trackPageView()
+  }, [])
+
+  // Reklamni baner (podešava se u admin panelu → tab "Baneri")
+  useEffect(() => {
+    const unsubscribe = subscribeToBanners((banners) => {
+      setPromoBanner(banners.find(b => b.active && b.image) || null)
+    })
+    return () => unsubscribe()
   }, [])
 
   return (
@@ -35,17 +46,12 @@ export default function Home() {
       
       <WeeklyBestSellers />
       
-      {/* Promo banner */}
-      <div className="lg:px-8">
-        <PromoBanner 
-          title="Flash ponude - do 50% popusta!"
-          subtitle="Ograničene količine, požuri dok traje akcija"
-          buttonText="Pogledaj ponude"
-          href="/products/category/rasprodaja"
-          variant="danger"
-          emoji="⚡"
-        />
-      </div>
+      {/* Promo baner — samo slika, postavlja se u admin panelu (tab "Baneri") */}
+      {promoBanner && (
+        <div className="lg:px-8">
+          <PromoBanner image={promoBanner.image} link={promoBanner.link} />
+        </div>
+      )}
       
       <FeaturedProducts />
     </div>

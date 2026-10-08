@@ -661,3 +661,72 @@ export const subscribeToProductViews = (callback: (views: ProductView[]) => void
     callback(views.sort((a, b) => (b.viewedAt || 0) - (a.viewedAt || 0)))
   })
 }
+
+// Banners (reklamni baneri na početnoj — npr. "Flash ponude")
+export interface Banner {
+  id?: string
+  image: string
+  /** Ako je prazno, baner nije klikabilan. */
+  link?: string
+  /** Samo aktivni baneri se prikazuju na sajtu. */
+  active?: boolean
+  createdAt?: number
+  updatedAt?: number
+}
+
+export const getBanners = async (): Promise<Banner[]> => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) return []
+  try {
+    const snapshot = await get(ref(db, 'banners'))
+    const banners = objectToArray<Banner>(snapshot.val())
+    return banners.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
+  } catch (error) {
+    console.error('[Realtime DB] Error fetching banners:', error)
+    return []
+  }
+}
+
+export const addBanner = async (banner: Omit<Banner, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) throw new Error('Database not initialized')
+  const cleanBanner = deepCleanUndefined(banner)
+  const newRef = push(ref(db, 'banners'))
+  await set(newRef, {
+    ...(cleanBanner as Record<string, unknown>),
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  })
+  return newRef.key!
+}
+
+export const updateBanner = async (id: string, banner: Partial<Banner>): Promise<void> => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) throw new Error('Database not initialized')
+  const cleanBanner = deepCleanUndefined(banner)
+  await update(ref(db, `banners/${id}`), {
+    ...(cleanBanner as Record<string, unknown>),
+    updatedAt: Date.now()
+  })
+}
+
+export const deleteBanner = async (id: string): Promise<void> => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) throw new Error('Database not initialized')
+  await remove(ref(db, `banners/${id}`))
+}
+
+export const subscribeToBanners = (callback: (banners: Banner[]) => void) => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) {
+    callback([])
+    return () => {}
+  }
+  return onValue(ref(db, 'banners'), (snapshot) => {
+    const banners = objectToArray<Banner>(snapshot.val())
+    callback(banners.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)))
+  }, (error) => {
+    console.error('[Realtime DB] Banners subscription error:', error)
+    callback([])
+  })
+}
