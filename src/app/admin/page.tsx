@@ -941,8 +941,13 @@ export default function AdminPage() {
                           {/* Category Header */}
                           <div className="p-4 flex items-center justify-between border-b border-white/5">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                                <span className="text-lg">{category.icon}</span>
+                              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center overflow-hidden">
+                                {category.imageUrl && (category.imageUrl.startsWith('http') || category.imageUrl.startsWith('/') || category.imageUrl.startsWith('data:')) ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={category.imageUrl} alt={category.name} className="w-full h-full object-cover" loading="lazy" />
+                                ) : (
+                                  <span className="text-lg">{category.icon}</span>
+                                )}
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
@@ -3253,8 +3258,16 @@ function CategoryModal({
     name: category?.name || '',
     slug: category?.slug || '',
     icon: category?.icon || '📁',
+    imageUrl: category?.imageUrl || '',
     showOnHome: category?.showOnHome ?? true,
   })
+  const [iconPreview, setIconPreview] = useState<string>(category?.imageUrl || '')
+  
+  // Live preview of the image URL as admin types it
+  const handleImageUrlChange = (value: string) => {
+    setFormData({ ...formData, imageUrl: value })
+    setIconPreview(value)
+  }
   const [saving, setSaving] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -3303,7 +3316,30 @@ function CategoryModal({
           </div>
 
           <div>
-            <label className="block text-sm text-muted mb-1">Ikona (emoji)</label>
+            <label className="block text-sm text-muted mb-1">Slika ikone (URL) — webp/png/jpg</label>
+            <input
+              type="url"
+              value={formData.imageUrl}
+              onChange={e => handleImageUrlChange(e.target.value)}
+              placeholder="https://.../ikona.webp ili /assets/images/ikona.webp"
+              className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-text focus:outline-none focus:border-primary"
+            />
+            <p className="text-[11px] text-muted mt-1">
+              Preporuka: koristite sliku umjesto emoji ikone. Preporučeni format je webp, kvadratna slika (npr. 128×128 ili 256×256) — prikazuje se preko cijelog kvadrata ikone na sajtu.
+            </p>
+            {iconPreview && /^https?:\/\/|^\/|^data:/.test(iconPreview) && (
+              <div className="mt-2 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl overflow-hidden bg-primary/10 flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={iconPreview} alt="Preview" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                </div>
+                <span className="text-xs text-muted">Preview slike</span>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm text-muted mb-1">Ikona (emoji) — fallback ako nema slike</label>
             <input
               type="text"
               value={formData.icon}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Search, Menu, ShoppingCart, Home, MessageCircle, X, TrendingUp, Clock, ArrowLeft, Moon, Sun, Phone, User, LogOut, LogIn, Package, ChevronDown } from 'lucide-react'
+import { Search, Menu, ShoppingCart, Home, MessageCircle, X, TrendingUp, Clock, ArrowLeft, Moon, Sun, Phone, User, LogOut, LogIn, Package, ChevronDown, Truck, ShieldCheck, MapPin, LayoutGrid, Headphones } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useProducts, useCategories } from '@/hooks/useProducts'
@@ -32,10 +32,12 @@ export default function Header() {
   const [mounted, setMounted] = useState(false)
   const [catDropdown, setCatDropdown] = useState(false)
   const [infoDropdown, setInfoDropdown] = useState(false)
+  const [userDropdown, setUserDropdown] = useState(false)
+  const [searchCatOpen, setSearchCatOpen] = useState(false)
   const catRef = useRef<HTMLDivElement>(null)
   const infoRef = useRef<HTMLDivElement>(null)
-  const [desktopSearchOpen, setDesktopSearchOpen] = useState(false)
-  const [desktopSearchClosing, setDesktopSearchClosing] = useState(false)
+  const userRef = useRef<HTMLDivElement>(null)
+  const searchCatRef = useRef<HTMLDivElement>(null)
   const desktopSearchRef = useRef<HTMLDivElement>(null)
   const desktopInputRef = useRef<HTMLInputElement>(null)
 
@@ -57,7 +59,7 @@ export default function Header() {
   useEffect(() => {
     if (searchQuery.trim().length > 1) {
       const query = searchQuery.toLowerCase()
-      const results = products.filter(p => 
+      const results = products.filter(p =>
         p.name.toLowerCase().includes(query) ||
         p.category?.toLowerCase().includes(query) ||
         p.description?.toLowerCase().includes(query)
@@ -93,21 +95,23 @@ export default function Header() {
   // Close dropdowns on click outside
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (catRef.current && !catRef.current.contains(e.target as Node)) setCatDropdown(false)
-      if (infoRef.current && !infoRef.current.contains(e.target as Node)) setInfoDropdown(false)
-      if (desktopSearchRef.current && !desktopSearchRef.current.contains(e.target as Node)) {
-        closeDesktopSearch()
-      }
+      const target = e.target as Node
+      if (catRef.current && !catRef.current.contains(target)) setCatDropdown(false)
+      if (infoRef.current && !infoRef.current.contains(target)) setInfoDropdown(false)
+      if (userRef.current && !userRef.current.contains(target)) setUserDropdown(false)
+      if (searchCatRef.current && !searchCatRef.current.contains(target)) setSearchCatOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  // Close menu on route change
+  // Close everything on route change
   useEffect(() => {
     setMenuOpen(false)
     setCatDropdown(false)
     setInfoDropdown(false)
+    setUserDropdown(false)
+    setSearchCatOpen(false)
   }, [pathname])
 
   // Prevent body scroll when menu is open
@@ -145,35 +149,22 @@ export default function Header() {
     setShowResults(true)
   }
 
-  const closeDesktopSearch = () => {
-    if (!desktopSearchOpen || desktopSearchClosing) return
-    setShowResults(false)
-    setDesktopSearchClosing(true)
-    setTimeout(() => {
-      setDesktopSearchOpen(false)
-      setDesktopSearchClosing(false)
-      setSearchQuery('')
-    }, 300)
-  }
-
   const closeSearch = () => {
     setIsFocused(false)
     setShowResults(false)
-    if (desktopSearchOpen) {
-      closeDesktopSearch()
-    } else {
-      setDesktopSearchOpen(false)
-    }
     setSearchQuery('')
     inputRef.current?.blur()
     desktopInputRef.current?.blur()
   }
 
+  const navLink =
+    'h-full flex items-center text-[15px] font-medium border-b-[3px] border-transparent transition-colors whitespace-nowrap'
+
   return (
     <>
       {/* Overlay for mobile when search is focused */}
       {isFocused && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 z-40 lg:hidden"
           onClick={closeSearch}
         />
@@ -181,7 +172,7 @@ export default function Header() {
 
       {/* Mobile Menu Overlay */}
       {menuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 z-[60] lg:hidden"
           onClick={() => setMenuOpen(false)}
         />
@@ -195,7 +186,7 @@ export default function Header() {
           {/* Menu Header */}
           <div className="flex items-center justify-between p-4 border-b border-white/10">
             <h2 className="text-lg font-bold text-text">Menu</h2>
-            <button 
+            <button
               onClick={() => setMenuOpen(false)}
               className="p-2 hover:bg-white/5 rounded-xl transition-colors"
             >
@@ -208,8 +199,8 @@ export default function Header() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                  isDark 
-                    ? 'bg-gradient-to-br from-indigo-500 to-purple-600' 
+                  isDark
+                    ? 'bg-gradient-to-br from-indigo-500 to-purple-600'
                     : 'bg-gradient-to-br from-yellow-400 to-orange-500'
                 }`}>
                   {isDark ? <Moon className="w-5 h-5 text-white" /> : <Sun className="w-5 h-5 text-white" />}
@@ -316,8 +307,8 @@ export default function Header() {
                   href={href}
                   onClick={() => setMenuOpen(false)}
                   className={`flex items-center justify-between px-4 py-3 rounded-xl transition-colors ${
-                    isActive 
-                      ? 'bg-primary/10 text-primary' 
+                    isActive
+                      ? 'bg-primary/10 text-primary'
                       : 'text-text hover:bg-white/5'
                   }`}
                 >
@@ -346,7 +337,7 @@ export default function Header() {
                   {category.name}
                 </Link>
               ))}
-              
+
               {/* Rasprodaja */}
               <Link
                 href="/products/category/rasprodaja"
@@ -395,396 +386,207 @@ export default function Header() {
         </div>
       </div>
 
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-white/5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3 lg:px-8 lg:py-4">
-          {/* Logo - hide on mobile when focused */}
-          <Link href="/" className={`flex items-center gap-2 lg:gap-3 ${isFocused ? 'hidden lg:flex' : ''}`}>
-            <div className="h-8 lg:h-10 w-auto">
-              <img src="/assets/images/full-logo.png" alt="Logo" className="h-full w-auto object-contain" />
+      <header className="fixed top-0 left-0 right-0 z-50 shadow-sm">
+        {/* RED 0 - info traka (trust + država/valuta) */}
+        <div className="hidden lg:block bg-surface border-b border-white/10">
+          <div className="max-w-7xl mx-auto flex items-center justify-between px-4 lg:px-8 h-10">
+            <div className="flex items-center gap-5 xl:gap-6 text-[12px] font-medium text-text">
+              <span className="flex items-center gap-1.5">
+                <Truck className="w-4 h-4 text-primary" />
+                Brza dostava 24-48h
+              </span>
+              <span className="w-px h-4 bg-white/10" />
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-primary" />
+                6 mjeseci garancije
+              </span>
+              <span className="w-px h-4 bg-white/10" />
+              <span className="flex items-center gap-1.5">
+                <Headphones className="w-4 h-4 text-primary" />
+                Podrška nakon kupovine
+              </span>
             </div>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-5">
-            {navItems.filter(n => n.href !== '/tracking').map(({ href, label }) => {
-              const isActive = pathname === href
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`text-sm transition-colors relative ${
-                    isActive ? 'text-primary font-medium' : 'text-muted hover:text-text'
-                  }`}
-                >
-                  {label}
-                  {label === 'Korpa' && mounted && totalItems > 0 && (
-                    <span className="absolute -top-2 -right-3 w-4 h-4 bg-danger rounded-full text-[10px] flex items-center justify-center text-white">
-                      {totalItems}
-                    </span>
-                  )}
-                </Link>
-              )
-            })}
-
-            {/* Categories Dropdown */}
-            <div ref={catRef} className="relative">
-              <button
-                onClick={() => { setCatDropdown(!catDropdown); setInfoDropdown(false) }}
-                className={`flex items-center gap-1 text-sm transition-colors ${
-                  catDropdown || pathname.startsWith('/products/category') ? 'text-primary font-medium' : 'text-muted hover:text-text'
-                }`}
-              >
-                Kategorije
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${catDropdown ? 'rotate-180' : ''}`} />
+            <div className="flex items-center gap-4 xl:gap-5 text-[12px] text-muted">
+              <button type="button" className="flex items-center gap-1.5 hover:text-text transition-colors">
+                <MapPin className="w-4 h-4 text-primary" />
+                <span className="font-medium tracking-[0.08em]">BOSNA I HERCEGOVINA</span>
+                <ChevronDown className="w-3.5 h-3.5" />
               </button>
-              {catDropdown && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 bg-surface border border-white/10 rounded-xl shadow-xl shadow-black/30 overflow-hidden z-50">
-                  <div className="py-1">
-                    {categories.map((category) => (
-                      <Link
-                        key={category.id}
-                        href={`/products/category/${category.slug}`}
-                        className="block px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors"
-                      >
-                        {category.name}
-                      </Link>
-                    ))}
-                    <div className="border-t border-white/5 mt-1 pt-1">
-                      <Link
-                        href="/products/category/rasprodaja"
-                        className="block px-4 py-2.5 text-sm text-danger hover:bg-danger/5 transition-colors"
-                      >
-                        Rasprodaja
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Informacije Dropdown */}
-            <div ref={infoRef} className="relative">
-              <button
-                onClick={() => { setInfoDropdown(!infoDropdown); setCatDropdown(false) }}
-                className={`flex items-center gap-1 text-sm transition-colors ${
-                  infoDropdown || ['/o-nama','/dostava','/garancija','/reklamacije'].includes(pathname) ? 'text-primary font-medium' : 'text-muted hover:text-text'
-                }`}
-              >
-                Informacije
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${infoDropdown ? 'rotate-180' : ''}`} />
+              <span className="w-px h-4 bg-white/10" />
+              <button type="button" className="flex items-center gap-1.5 hover:text-text transition-colors">
+                <span className="font-medium">KM</span>
+                <ChevronDown className="w-3.5 h-3.5" />
               </button>
-              {infoDropdown && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 bg-surface border border-white/10 rounded-xl shadow-xl shadow-black/30 overflow-hidden z-50">
-                  <div className="py-1">
-                    <Link href="/o-nama" className="block px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors">
-                      O nama
-                    </Link>
-                    <Link href="/dostava" className="block px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors">
-                      Dostava
-                    </Link>
-                    <Link href="/garancija" className="block px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors">
-                      Garancija
-                    </Link>
-                    <Link href="/reklamacije" className="block px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors">
-                      Reklamacije i povrat
-                    </Link>
-                  </div>
-                </div>
-              )}
             </div>
-          </nav>
+          </div>
+        </div>
 
-          {/* Mobile Search */}
-          <div 
-            className={`relative z-50 transition-all duration-200 lg:hidden ${
-              isFocused 
-                ? 'flex-1' 
-                : 'flex-1 mx-3 max-w-md'
-            }`} 
-            ref={searchRef}
-          >
-            <form onSubmit={handleSearch}>
-              <div className="relative flex items-center gap-2">
-                {/* Back button on mobile when focused */}
-                {isFocused && (
-                  <button 
-                    type="button"
-                    onClick={closeSearch}
-                    className="p-2 -ml-2 lg:hidden flex-shrink-0"
-                  >
-                    <ArrowLeft className="w-5 h-5 text-text" />
-                  </button>
-                )}
-                <div className="relative flex-1">
-                  <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 transition-colors ${
-                    isFocused ? 'text-primary' : 'text-muted'
-                  }`} />
+        {/* RED 1 - logo + velika search traka + korisničke akcije */}
+        <div className="bg-surface border-b border-white/10">
+          <div className="max-w-7xl mx-auto flex items-center gap-3 lg:gap-6 px-4 lg:px-8 h-[60px] lg:h-[80px]">
+            {/* Logo */}
+            <Link href="/" className={`items-center flex-shrink-0 ${isFocused ? 'hidden lg:flex' : 'flex'}`}>
+              <img
+                src="/assets/images/full-logo.png"
+                alt="EasyGo"
+                className="h-8 lg:h-10 w-auto object-contain"
+              />
+            </Link>
+
+            {/* Desktop search - velika, centralna traka */}
+            <div ref={desktopSearchRef} className="hidden lg:flex flex-1 justify-center relative">
+              <form onSubmit={handleSearch} className="w-full max-w-xl xl:max-w-2xl">
+                <div className="relative flex items-center">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-muted pointer-events-none" />
                   <input
-                    ref={inputRef}
+                    ref={desktopInputRef}
                     type="text"
                     placeholder="Šta tražite danas?"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={handleFocus}
-                    className={`w-full bg-background border rounded-xl py-2.5 lg:py-3 pl-10 lg:pl-12 pr-10 text-sm text-text placeholder:text-muted focus:outline-none transition-all ${
-                      isFocused 
-                        ? 'border-primary shadow-lg shadow-primary/10' 
-                        : 'border-white/10 hover:border-white/20'
-                    }`}
+                    onFocus={() => { setIsFocused(false); setShowResults(true) }}
+                    className="w-full bg-background border border-white/10 rounded-full py-3 pl-12 pr-[136px] xl:pr-[256px] text-sm text-text placeholder:text-muted focus:outline-none focus:border-primary"
                   />
-                  {searchQuery && (
-                    <button 
-                      type="button"
-                      onClick={() => { setSearchQuery(''); inputRef.current?.focus() }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded-full transition-colors"
+                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-3">
+                    {/* Sve kategorije (skraćeni izbor) */}
+                    <div ref={searchCatRef} className="relative hidden xl:block">
+                      <button
+                        type="button"
+                        onClick={() => setSearchCatOpen(!searchCatOpen)}
+                        className="flex items-center gap-1 text-[13px] text-muted hover:text-text pl-2.5 pr-0 py-1.5 whitespace-nowrap transition-colors"
+                      >
+                        Sve kategorije
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${searchCatOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {searchCatOpen && (
+                        <div className="absolute top-full right-0 mt-2 w-56 bg-surface border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 py-1 max-h-72 overflow-y-auto">
+                          <Link
+                            href="/products"
+                            onClick={() => setSearchCatOpen(false)}
+                            className="block px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors"
+                          >
+                            Sve kategorije
+                          </Link>
+                          {categories.map((category) => (
+                            <Link
+                              key={category.id}
+                              href={`/products/category/${category.slug}`}
+                              onClick={() => setSearchCatOpen(false)}
+                              className="block px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors"
+                            >
+                              {category.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <span className="hidden xl:block w-px h-5 bg-white/10" />
+                    <button
+                      type="submit"
+                      className="flex items-center bg-primary hover:opacity-90 text-white text-[13px] font-semibold px-5 py-2.5 rounded-full transition-all"
                     >
-                      <X className="w-4 h-4 text-muted" />
+                      <span className="flex items-center gap-1.5 text-[13px] font-semibold text-white">
+                        <Search className="w-3.5 h-3.5" />
+                        Pretraži
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            {/* Mobile Search */}
+            <div
+              className={`relative z-50 transition-all duration-200 lg:hidden ${
+                isFocused
+                  ? 'flex-1 min-w-0'
+                  : 'flex-1 min-w-0 mx-3 max-w-md'
+              }`}
+              ref={searchRef}
+            >
+              <form onSubmit={handleSearch}>
+                <div className="relative flex items-center gap-2">
+                  {/* Back button on mobile when focused */}
+                  {isFocused && (
+                    <button
+                      type="button"
+                      onClick={closeSearch}
+                      className="p-2 -ml-2 lg:hidden flex-shrink-0"
+                    >
+                      <ArrowLeft className="w-5 h-5 text-text" />
                     </button>
                   )}
+                  <div className="relative flex-1 min-w-0">
+                    <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 transition-colors ${
+                      isFocused ? 'text-primary' : 'text-muted'
+                    }`} />
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      placeholder="Šta tražite danas?"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onFocus={handleFocus}
+                      className={`w-full min-w-0 bg-background border rounded-full py-2.5 lg:py-3 pl-10 lg:pl-12 pr-10 text-sm text-text placeholder:text-muted focus:outline-none transition-all ${
+                        isFocused
+                          ? 'border-primary shadow-lg shadow-primary/10'
+                          : 'border-white/10 hover:border-white/20'
+                      }`}
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => { setSearchQuery(''); inputRef.current?.focus() }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded-full transition-colors"
+                      >
+                        <X className="w-4 h-4 text-muted" />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </form>
+              </form>
 
-            {/* Search Dropdown */}
-            {showResults && (
-              <div className={`bg-surface border border-white/10 shadow-2xl shadow-black/30 overflow-hidden z-50 max-h-[75vh] overflow-y-auto ${
-                isFocused 
-                  ? 'fixed left-0 right-0 top-[60px] rounded-none border-x-0 border-t-0 lg:absolute lg:left-0 lg:right-0 lg:top-full lg:mt-2 lg:rounded-2xl lg:border' 
-                  : 'absolute top-full left-0 right-0 mt-2 rounded-2xl'
-              }`}>
-                
-                {/* No query - show suggestions */}
-                {searchQuery.length === 0 && (
-                  <>
-                    <div className="p-4 border-b border-white/5">
-                      <div className="flex items-center gap-2 text-xs text-muted mb-3">
-                        <TrendingUp className="w-3.5 h-3.5" />
-                        <span>Popularno</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {popularSearches.map((term) => (
-                          <button
-                            key={term}
-                            onClick={() => handlePopularSearch(term)}
-                            className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary text-sm rounded-full transition-colors"
-                          >
-                            {term}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+              {/* Search Dropdown (mobile) */}
+              {showResults && (
+                <div className={`bg-surface border border-white/10 shadow-2xl shadow-black/30 overflow-hidden z-50 max-h-[75vh] overflow-y-auto ${
+                  isFocused
+                    ? 'fixed left-0 right-0 top-[60px] rounded-none border-x-0 border-t-0 lg:absolute lg:left-0 lg:right-0 lg:top-full lg:mt-2 lg:rounded-2xl lg:border'
+                    : 'absolute top-full left-0 right-0 mt-2 rounded-2xl'
+                }`}>
 
-                    {products.length > 0 && (
-                      <div className="p-4">
+                  {/* No query - show suggestions */}
+                  {searchQuery.length === 0 && (
+                    <>
+                      <div className="p-4 border-b border-white/5">
                         <div className="flex items-center gap-2 text-xs text-muted mb-3">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span>Preporučeno</span>
+                          <TrendingUp className="w-3.5 h-3.5" />
+                          <span>Popularno</span>
                         </div>
-                        <div className="space-y-1">
-                          {products.slice(0, 4).map((product) => (
+                        <div className="flex flex-wrap gap-2">
+                          {popularSearches.map((term) => (
                             <button
-                              key={product.id}
-                              onClick={() => handleResultClick(product.slug || product.id!)}
-                              className="w-full flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl transition-colors text-left"
+                              key={term}
+                              onClick={() => handlePopularSearch(term)}
+                              className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary text-sm rounded-full transition-colors"
                             >
-                              <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                {isImageUrl(product.image) ? (
-                                  <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                                ) : (
-                                  <span className="text-xl">{product.image}</span>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm text-text truncate">{product.name}</p>
-                                <p className="text-xs text-muted">{product.category}</p>
-                              </div>
-                              <span className="text-sm font-bold text-primary">{product.price.toFixed(2)} KM</span>
+                              {term}
                             </button>
                           ))}
                         </div>
                       </div>
-                    )}
-                  </>
-                )}
 
-                {/* Search Results */}
-                {searchQuery.length > 1 && searchResults.length > 0 && (
-                  <>
-                    <div className="p-2">
-                      {searchResults.map((product, index) => (
-                        <button
-                          key={product.id}
-                          onClick={() => handleResultClick(product.slug || product.id!)}
-                          className={`w-full flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl transition-colors text-left ${
-                            index === 0 ? 'bg-white/[0.02]' : ''
-                          }`}
-                        >
-                          <div className="w-14 h-14 bg-white/5 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
-                            {isImageUrl(product.image) ? (
-                              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-2xl">{product.image}</span>
-                            )}
+                      {products.length > 0 && (
+                        <div className="p-4">
+                          <div className="flex items-center gap-2 text-xs text-muted mb-3">
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>Preporučeno</span>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-text line-clamp-1 font-medium">{product.name}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs text-muted">{product.category}</span>
-                              {product.badge && (
-                                <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                                  product.badge === 'sale' ? 'bg-danger/20 text-danger' : 'bg-accent/20 text-accent'
-                                }`}>
-                                  {product.badge === 'sale' ? 'Akcija' : 'Novo'}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <span className="text-base font-bold text-primary">{product.price.toFixed(2)} KM</span>
-                            {product.originalPrice && product.originalPrice > product.price && (
-                              <span className="text-[11px] text-muted line-through block">{product.originalPrice.toFixed(2)}</span>
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                    <Link
-                      href={`/products?search=${encodeURIComponent(searchQuery)}`}
-                      onClick={closeSearch}
-                      className="flex items-center justify-center gap-2 p-4 text-sm text-primary hover:bg-primary/5 border-t border-white/5 transition-colors font-medium"
-                    >
-                      <Search className="w-4 h-4" />
-                      <span>Vidi sve rezultate za "{searchQuery}"</span>
-                    </Link>
-                  </>
-                )}
-
-                {/* No Results */}
-                {searchQuery.length > 1 && searchResults.length === 0 && (
-                  <div className="p-8 text-center">
-                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Search className="w-8 h-8 text-muted" />
-                    </div>
-                    <p className="text-base text-text mb-1">Nema rezultata</p>
-                    <p className="text-sm text-muted">Pokušajte s drugim pojmom za "{searchQuery}"</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Right side - Search + Dark mode + User + Orders + Burger menu */}
-          <div className={`flex items-center gap-1.5 ${isFocused ? 'hidden lg:flex' : ''}`}>
-            {/* Desktop search icon + expanding input */}
-            <div ref={desktopSearchRef} className="hidden lg:flex items-center relative">
-              {!desktopSearchOpen ? (
-                <button
-                  onClick={() => {
-                    setDesktopSearchOpen(true)
-                    setTimeout(() => desktopInputRef.current?.focus(), 150)
-                  }}
-                  className="p-2 hover:bg-white/5 rounded-lg transition-colors border border-white/10"
-                  aria-label="Search"
-                >
-                  <Search className="w-5 h-5 text-muted" />
-                </button>
-              ) : (
-                <div className={`flex items-center overflow-hidden ${
-                  desktopSearchClosing
-                    ? 'animate-[slideOut_0.3s_cubic-bezier(0.22,1,0.36,1)_forwards]'
-                    : 'animate-[slideIn_0.35s_cubic-bezier(0.22,1,0.36,1)_forwards]'
-                }`}>
-                  <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) { router.push(`/products?search=${encodeURIComponent(searchQuery)}`); closeSearch() } }}>
-                    <div className="relative flex items-center">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
-                      <input
-                        ref={desktopInputRef}
-                        type="text"
-                        placeholder="Šta tražite danas?"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onFocus={() => { setIsFocused(false); setShowResults(true) }}
-                        className="w-72 bg-background border border-primary rounded-xl py-2 pl-9 pr-9 text-sm text-text placeholder:text-muted focus:outline-none shadow-lg shadow-primary/10"
-                      />
-                      <button
-                        type="button"
-                        onClick={closeSearch}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 hover:bg-white/10 rounded-full transition-colors"
-                      >
-                        <X className="w-4 h-4 text-muted" />
-                      </button>
-                    </div>
-                  </form>
-
-                  {/* Desktop search results dropdown */}
-                  {showResults && !desktopSearchClosing && (
-                    <div className="absolute top-full right-0 mt-2 w-72 bg-surface border border-white/10 rounded-xl shadow-2xl shadow-black/30 overflow-hidden z-50 max-h-[60vh] overflow-y-auto">
-
-                      {/* No query - show suggestions */}
-                      {searchQuery.length === 0 && (
-                        <>
-                          <div className="p-4 border-b border-white/5">
-                            <div className="flex items-center gap-2 text-xs text-muted mb-3">
-                              <TrendingUp className="w-3.5 h-3.5" />
-                              <span>Popularno</span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {popularSearches.map((term) => (
-                                <button
-                                  key={term}
-                                  onClick={() => { handlePopularSearch(term); setDesktopSearchOpen(false) }}
-                                  className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary text-sm rounded-full transition-colors"
-                                >
-                                  {term}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {products.length > 0 && (
-                            <div className="p-4">
-                              <div className="flex items-center gap-2 text-xs text-muted mb-3">
-                                <Clock className="w-3.5 h-3.5" />
-                                <span>Preporučeno</span>
-                              </div>
-                              <div className="space-y-1">
-                                {products.slice(0, 4).map((product) => (
-                                  <button
-                                    key={product.id}
-                                    onClick={() => { handleResultClick(product.slug || product.id!); setDesktopSearchOpen(false) }}
-                                    className="w-full flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl transition-colors text-left"
-                                  >
-                                    <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                      {isImageUrl(product.image) ? (
-                                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                                      ) : (
-                                        <span className="text-xl">{product.image}</span>
-                                      )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm text-text truncate">{product.name}</p>
-                                      <p className="text-xs text-muted">{product.category}</p>
-                                    </div>
-                                    <span className="text-sm font-bold text-primary">{product.price.toFixed(2)} KM</span>
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      )}
-
-                      {/* Search results */}
-                      {searchQuery.length > 1 && searchResults.length > 0 && (
-                        <>
-                          <div className="p-2">
-                            {searchResults.map((product, index) => (
+                          <div className="space-y-1">
+                            {products.slice(0, 4).map((product) => (
                               <button
                                 key={product.id}
-                                onClick={() => { handleResultClick(product.slug || product.id!); setDesktopSearchOpen(false) }}
-                                className={`w-full flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl transition-colors text-left ${
-                                  index === 0 ? 'bg-white/[0.02]' : ''
-                                }`}
+                                onClick={() => handleResultClick(product.slug || product.id!)}
+                                className="w-full flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl transition-colors text-left"
                               >
                                 <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
                                   {isImageUrl(product.image) ? (
@@ -794,94 +596,285 @@ export default function Header() {
                                   )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm text-text line-clamp-1 font-medium">{product.name}</p>
-                                  <span className="text-xs text-muted">{product.category}</span>
+                                  <p className="text-sm text-text truncate">{product.name}</p>
+                                  <p className="text-xs text-muted">{product.category}</p>
                                 </div>
-                                <span className="text-sm font-bold text-primary flex-shrink-0">{product.price.toFixed(2)} KM</span>
+                                <span className="text-sm font-bold text-primary">{product.price.toFixed(2)} KM</span>
                               </button>
                             ))}
                           </div>
-                          <Link
-                            href={`/products?search=${encodeURIComponent(searchQuery)}`}
-                            onClick={closeSearch}
-                            className="flex items-center justify-center gap-2 p-3 text-sm text-primary hover:bg-primary/5 border-t border-white/5 transition-colors font-medium"
-                          >
-                            <Search className="w-4 h-4" />
-                            <span>Vidi sve rezultate za "{searchQuery}"</span>
-                          </Link>
-                        </>
-                      )}
-
-                      {/* No results */}
-                      {searchQuery.length > 1 && searchResults.length === 0 && (
-                        <div className="p-6 text-center">
-                          <Search className="w-6 h-6 text-muted mx-auto mb-2" />
-                          <p className="text-sm text-text">Nema rezultata</p>
-                          <p className="text-xs text-muted">Pokušajte s drugim pojmom</p>
                         </div>
                       )}
+                    </>
+                  )}
+
+                  {/* Search Results */}
+                  {searchQuery.length > 1 && searchResults.length > 0 && (
+                    <>
+                      <div className="p-2">
+                        {searchResults.map((product, index) => (
+                          <button
+                            key={product.id}
+                            onClick={() => handleResultClick(product.slug || product.id!)}
+                            className={`w-full flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl transition-colors text-left ${
+                              index === 0 ? 'bg-white/[0.02]' : ''
+                            }`}
+                          >
+                            <div className="w-14 h-14 bg-white/5 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                              {isImageUrl(product.image) ? (
+                                <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-2xl">{product.image}</span>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-text line-clamp-1 font-medium">{product.name}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs text-muted">{product.category}</span>
+                                {product.badge && (
+                                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                                    product.badge === 'sale' ? 'bg-danger/20 text-danger' : 'bg-accent/20 text-accent'
+                                  }`}>
+                                    {product.badge === 'sale' ? 'Akcija' : 'Novo'}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                              <span className="text-base font-bold text-primary">{product.price.toFixed(2)} KM</span>
+                              {product.originalPrice && product.originalPrice > product.price && (
+                                <span className="text-[11px] text-muted line-through block">{product.originalPrice.toFixed(2)}</span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                      <Link
+                        href={`/products?search=${encodeURIComponent(searchQuery)}`}
+                        onClick={closeSearch}
+                        className="flex items-center justify-center gap-2 p-4 text-sm text-primary hover:bg-primary/5 border-t border-white/5 transition-colors font-medium"
+                      >
+                        <Search className="w-4 h-4" />
+                        <span>Vidi sve rezultate za &quot;{searchQuery}&quot;</span>
+                      </Link>
+                    </>
+                  )}
+
+                  {/* No Results */}
+                  {searchQuery.length > 1 && searchResults.length === 0 && (
+                    <div className="p-8 text-center">
+                      <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Search className="w-8 h-8 text-muted" />
+                      </div>
+                      <p className="text-base text-text mb-1">Nema rezultata</p>
+                      <p className="text-sm text-muted">Pokušajte s drugim pojmom za &quot;{searchQuery}&quot;</p>
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Desktop dark mode toggle */}
-            <button
-              onClick={toggleTheme}
-              className="hidden lg:flex p-2 hover:bg-white/5 rounded-lg transition-colors border border-white/10"
-              aria-label="Toggle theme"
-            >
-              {isDark ? <Moon className="w-5 h-5 text-muted" /> : <Sun className="w-5 h-5 text-muted" />}
-            </button>
-
-            {/* Desktop user button */}
-            {user ? (
-              <Link
-                href="/profile"
-                className="hidden lg:flex items-center gap-2 p-1.5 hover:bg-white/5 rounded-lg transition-colors"
+            {/* Right side - theme, Moj račun, Korpa, burger */}
+            <div className={`items-center gap-1.5 lg:gap-5 ${isFocused ? 'hidden lg:flex' : 'flex'}`}>
+              {/* Theme toggle - kružno dugme */}
+              <button
+                onClick={toggleTheme}
+                className="hidden lg:flex items-center justify-center w-10 h-10 rounded-full bg-background border border-white/10 hover:bg-white/5 transition-colors"
+                aria-label="Toggle theme"
               >
-                {user.photoURL ? (
-                  <img src={user.photoURL} alt="" className="w-7 h-7 rounded-full object-cover" />
-                ) : (
-                  <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-bold text-primary">
-                      {(userProfile?.displayName || user.email || '?')[0].toUpperCase()}
-                    </span>
+                {isDark ? <Moon className="w-5 h-5 text-text" /> : <Sun className="w-5 h-5 text-text" />}
+              </button>
+
+              {/* Moj račun */}
+              <div ref={userRef} className="relative hidden lg:block">
+                <button
+                  onClick={() => setUserDropdown(!userDropdown)}
+                  className="flex items-center gap-2 px-2.5 h-10 rounded-lg hover:bg-white/5 transition-colors"
+                >
+                  <User className="w-[18px] h-[18px] text-text" />
+                  <span className="text-[13px] font-medium text-text">Moj račun</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-muted transition-transform ${userDropdown ? 'rotate-180' : ''}`} />
+                </button>
+                {userDropdown && (
+                  <div className="absolute top-full right-0 mt-2 w-60 bg-surface border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 py-1">
+                    {user ? (
+                      <>
+                        <div className="px-4 py-3 border-b border-white/5">
+                          <p className="text-sm font-medium text-text truncate">{userProfile?.displayName || 'Korisnik'}</p>
+                          <p className="text-xs text-muted truncate">{user.email}</p>
+                        </div>
+                        <Link href="/profile" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors">
+                          <User className="w-4 h-4 text-muted" />
+                          Moj profil
+                        </Link>
+                        <Link href="/tracking" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors">
+                          <Package className="w-4 h-4 text-muted" />
+                          Moje narudžbe
+                        </Link>
+                        <button
+                          onClick={async () => { setUserDropdown(false); await logout() }}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-danger hover:bg-danger/5 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Odjava
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link href="/auth/login" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors">
+                          <LogIn className="w-4 h-4 text-muted" />
+                          Prijava
+                        </Link>
+                        <Link href="/auth/register" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors">
+                          <User className="w-4 h-4 text-muted" />
+                          Registracija
+                        </Link>
+                        <Link href="/tracking" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors border-t border-white/5">
+                          <Package className="w-4 h-4 text-muted" />
+                          Praćenje narudžbe
+                        </Link>
+                      </>
+                    )}
                   </div>
                 )}
-              </Link>
-            ) : (
+              </div>
+
+              {/* Korpa sa narandžastim badžom */}
               <Link
-                href="/auth/login"
-                className={`hidden lg:flex items-center gap-2 text-sm transition-colors p-2 rounded-lg ${
-                  pathname === '/auth/login' ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-white/5 hover:text-text'
+                href="/cart"
+                className="relative flex items-center gap-2 px-2.5 h-10 rounded-lg hover:bg-white/5 transition-colors"
+                aria-label="Korpa"
+              >
+                <div className="relative">
+                  <ShoppingCart className="w-[18px] h-[18px] text-text" />
+                  {mounted && (
+                    <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 bg-orange-500 rounded-full text-[11px] flex items-center justify-center font-bold text-[#ffffff]">
+                      {totalItems}
+                    </span>
+                  )}
+                </div>
+                <span className="hidden lg:block text-[13px] font-medium text-text">Korpa</span>
+              </Link>
+
+              {/* Mobile burger menu */}
+              <button
+                onClick={() => setMenuOpen(true)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors lg:hidden"
+                aria-label="Menu"
+              >
+                <Menu className="w-5 h-5 text-text" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* RED 2 - kategorije + glavna navigacija */}
+        <div className="hidden lg:block bg-surface border-b border-white/10">
+          <div className="max-w-7xl mx-auto flex items-center gap-10 px-4 lg:px-8 h-16">
+            {/* Sve kategorije dugme + mega dropdown */}
+            <div ref={catRef} className="relative h-full flex items-center">
+              <button
+                onClick={() => { setCatDropdown(!catDropdown); setInfoDropdown(false) }}
+                className="flex items-center bg-primary hover:opacity-90 text-white text-sm font-semibold px-7 h-11 rounded-lg transition-all"
+              >
+                <span className="flex items-center gap-2.5 text-sm font-semibold text-white">
+                  <LayoutGrid className="w-[18px] h-[18px]" />
+                  Sve kategorije
+                  <ChevronDown className={`w-4 h-4 transition-transform ${catDropdown ? 'rotate-180' : ''}`} />
+                </span>
+              </button>
+              {catDropdown && (
+                <div className="absolute top-full left-0 mt-1 w-[640px] bg-surface border border-white/10 rounded-2xl shadow-2xl shadow-black/30 overflow-hidden z-50">
+                  <div className="p-4 grid grid-cols-4 gap-3 max-h-[70vh] overflow-y-auto">
+                    {categories.map((category) => (
+                      <Link key={category.id} href={`/products/category/${category.slug}`} className="group">
+                        <div className="aspect-square rounded-xl overflow-hidden bg-white/5 flex items-center justify-center mb-1.5 group-hover:ring-2 ring-primary transition-all">
+                          {category.imageUrl ? (
+                            <img src={category.imageUrl} alt={category.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-3xl">{category.icon}</span>
+                          )}
+                        </div>
+                        <p className="text-xs font-medium text-text group-hover:text-primary transition-colors text-center line-clamp-2">
+                          {category.name}
+                        </p>
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="border-t border-white/5 py-1">
+                    <Link
+                      href="/products/category/rasprodaja"
+                      className="block px-4 py-2.5 text-sm text-danger hover:bg-danger/5 transition-colors"
+                    >
+                      😥 Rasprodaja
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Glavni linkovi */}
+            <nav className="flex items-center gap-10 h-full">
+              <Link
+                href="/"
+                className={`${navLink} ${
+                  pathname === '/' ? 'text-primary border-primary' : 'text-text hover:text-primary'
                 }`}
               >
-                <User className="w-4 h-4" />
-                <span>Prijava</span>
+                Početna
               </Link>
-            )}
+              <Link
+                href="/products?filter=sale"
+                className={`${navLink} text-orange-500 hover:text-orange-600 font-semibold`}
+              >
+                Akcije
+              </Link>
+              <Link
+                href="/products?filter=new"
+                className={`${navLink} text-text hover:text-primary`}
+              >
+                Novo
+              </Link>
+              <Link
+                href="/blog"
+                className={`${navLink} ${
+                  pathname.startsWith('/blog') ? 'text-primary border-primary' : 'text-text hover:text-primary'
+                }`}
+              >
+                Blog
+              </Link>
 
-            {/* Desktop orders button */}
-            <Link
-              href="/tracking"
-              className={`hidden lg:flex items-center gap-1.5 p-2 rounded-lg transition-colors text-sm ${
-                pathname === '/tracking' ? 'bg-primary/10 text-primary' : 'hover:bg-white/5 text-muted hover:text-text'
-              }`}
-            >
-              <Package className="w-4 h-4" />
-              <span>Narudžbe</span>
-            </Link>
+              {/* Informacije dropdown */}
+              <div ref={infoRef} className="relative h-full flex items-center">
+                <button
+                  onClick={() => { setInfoDropdown(!infoDropdown); setCatDropdown(false) }}
+                  className={`${navLink} gap-1 ${
+                    infoDropdown ? 'text-primary border-primary' : 'text-text hover:text-primary'
+                  }`}
+                >
+                  Informacije
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${infoDropdown ? 'rotate-180' : ''}`} />
+                </button>
+                {infoDropdown && (
+                  <div className="absolute top-full left-0 mt-1 w-56 bg-surface border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 py-1">
+                    <Link href="/o-nama" className="block px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors">O nama</Link>
+                    <Link href="/dostava" className="block px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors">Dostava</Link>
+                    <Link href="/garancija" className="block px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors">Garancija</Link>
+                    <Link href="/reklamacije" className="block px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors">Reklamacije i povrat</Link>
+                    <Link href="/usluge" className="block px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors">Usluge</Link>
+                  </div>
+                )}
+              </div>
 
-            {/* Mobile burger menu */}
-            <button 
-              onClick={() => setMenuOpen(true)}
-              className="p-2 hover:bg-white/5 rounded-lg transition-colors lg:hidden" 
-              aria-label="Menu"
-            >
-              <Menu className="w-5 h-5 text-muted" />
-            </button>
+              <Link
+                href="/contact"
+                className={`${navLink} ${
+                  pathname.startsWith('/contact') ? 'text-primary border-primary' : 'text-text hover:text-primary'
+                }`}
+              >
+                Kontakt
+              </Link>
+            </nav>
           </div>
         </div>
       </header>

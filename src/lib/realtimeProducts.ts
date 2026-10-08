@@ -78,6 +78,7 @@ export interface Category {
   name: string
   slug: string
   icon: string
+  imageUrl?: string
   showOnHome?: boolean
 }
 

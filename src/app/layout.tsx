@@ -87,8 +87,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="bs" data-theme="dark" suppressHydrationWarning>
+    <html lang="bs" data-theme="light" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`,
+          }}
+        />
         <link rel="dns-prefetch" href="https://easygo-a9fd0-default-rtdb.firebaseio.com" />
         <link rel="preconnect" href="https://easygo-a9fd0-default-rtdb.firebaseio.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
@@ -157,7 +162,7 @@ export default function RootLayout({
               <CartSync />
               <IframeSync />
               <Header />
-              <main className="pt-16 lg:pt-20 pb-8 flex-1">
+              <main className="pt-[64px] lg:pt-[188px] pb-8 flex-1">
                   {children}
               </main>
               <Footer />

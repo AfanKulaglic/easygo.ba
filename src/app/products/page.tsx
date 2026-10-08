@@ -34,6 +34,12 @@ export default function ProductsPage() {
     if (search) {
       setSearchQuery(search)
     }
+    const filter = searchParams.get('filter')
+    if (filter === 'sale' || filter === 'new' || filter === 'popular') {
+      setQuickFilter(filter as 'sale' | 'new' | 'popular')
+    } else if (filter === null) {
+      setQuickFilter(null)
+    }
   }, [searchParams])
 
   const loading = productsLoading || categoriesLoading || subcategoriesLoading
@@ -154,7 +160,9 @@ export default function ProductsPage() {
                     : 'bg-surface text-muted border border-white/10 hover:border-primary/30'
                 }`}
               >
-                {cat.icon && cat.icon.length <= 2 && <span>{cat.icon}</span>}
+                {cat.imageUrl && (cat.imageUrl.startsWith('http') || cat.imageUrl.startsWith('/') || cat.imageUrl.startsWith('data:')) ? (
+                  <img src={cat.imageUrl} alt="" className="w-5 h-5 object-cover rounded" loading="lazy" />
+                ) : cat.icon && cat.icon.length <= 2 && <span>{cat.icon}</span>}
                 <span>{cat.name}</span>
               </button>
             ))}

@@ -33,6 +33,10 @@ const getDisplayIcon = (icon: string): string => {
   return iconMap[icon.toLowerCase()] || '📦'
 }
 
+// Check if a string is an image URL (http(s), root-relative or data URI)
+const isImageUrl = (str?: string): boolean =>
+  !!str && (str.startsWith('http') || str.startsWith('/') || str.startsWith('data:'))
+
 export default function CategoryGrid() {
   const { categories, loading } = useCategories()
   
@@ -77,6 +81,7 @@ export default function CategoryGrid() {
       <div className="grid grid-cols-4 lg:grid-cols-8 gap-3 lg:gap-4">
         {homeCategories.map((category, index) => {
           const displayIcon = getDisplayIcon(category.icon)
+          const hasImage = isImageUrl(category.imageUrl)
           
           return (
             <Link
@@ -85,8 +90,18 @@ export default function CategoryGrid() {
               className="group flex flex-col items-center p-3 lg:p-4 rounded-2xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 bg-surface border border-white/5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 aspect-square"
               style={{ animationDelay: `${index * 30}ms` }}
             >
-              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 flex-shrink-0 bg-gradient-to-br from-primary/20 to-accent/10">
-                <span className="text-xl lg:text-2xl">{displayIcon}</span>
+              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 flex-shrink-0 overflow-hidden bg-gradient-to-br from-primary/20 to-accent/10">
+                {hasImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={category.imageUrl}
+                    alt={category.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="text-xl lg:text-2xl">{displayIcon}</span>
+                )}
               </div>
               <span className="text-[10px] lg:text-xs text-center font-medium line-clamp-2 mt-2 h-8 flex items-center transition-colors text-text group-hover:text-primary">
                 {category.name}
