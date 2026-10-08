@@ -23,10 +23,10 @@ export default function Home() {
     trackPageView()
   }, [])
 
-  // Reklamni baner (podešava se u admin panelu → tab "Baneri")
+  // Reklamni baner (podešava se u admin panelu → tab "Baneri" → tip "Reklamni")
   useEffect(() => {
     const unsubscribe = subscribeToBanners((banners) => {
-      setPromoBanner(banners.find(b => b.active && b.image) || null)
+      setPromoBanner(banners.find(b => b.active && b.image && (b.type || 'promo') === 'promo') || null)
     })
     return () => unsubscribe()
   }, [])

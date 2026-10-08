@@ -4,27 +4,33 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useHeroProducts } from '@/hooks/useProducts'
-import { Product } from '@/lib/realtimeProducts'
+import { subscribeToBanners, Banner } from '@/lib/realtimeProducts'
 
-// Helper to check if string is an image URL or base64
-const isImageUrl = (str: string) => str?.startsWith('http') || str?.startsWith('/') || str?.startsWith('data:')
-
-// Default banner when no products are set for hero
-const defaultBanner: Partial<Product> & { id: string } = {
-  id: 'default',
-  name: 'Dobrodošli u Shop',
-  heroSubtitle: 'Pronađite najbolje proizvode po najboljim cijenama',
-  image: '🛒',
-}
-
+/**
+ * Hero slajder na vrhu početne.
+ * Slajdovi su STANDALONE hero baneri (admin → Baneri → tip "Hero") —
+ * slika + opcion klik link. Nema nikakve veze sa proizvodima.
+ * Ako nema aktivnih hero banera, sekcija se ne prikazuje.
+ */
 export default function HeroBanner() {
   const [current, setCurrent] = useState(0)
-  const { heroProducts, loading } = useHeroProducts()
+  const [banners, setBanners] = useState<Banner[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Use hero products or fallback to default
-  const banners = heroProducts.length > 0 ? heroProducts : [defaultBanner]
+  useEffect(() => {
+    const unsubscribe = subscribeToBanners((all) => {
+      setBanners(all.filter(b => b.active && (b.type || 'promo') === 'hero' && b.image))
+      setLoading(false)
+    })
+    return () => unsubscribe()
+  }, [])
 
+  // Reset slajda kad se lista promijeni (npr. admin obriše baner)
+  useEffect(() => {
+    if (current >= banners.length) setCurrent(0)
+  }, [banners.length, current])
+
+  // Auto-rotacija (5s)
   useEffect(() => {
     if (banners.length <= 1) return
     const timer = setInterval(() => {
@@ -44,53 +50,49 @@ export default function HeroBanner() {
     )
   }
 
+  // Nema hero banera → hero sekcija se ne prikazuje
+  if (banners.length === 0) return null
+
   return (
     <div className="mx-4 mt-4 lg:mx-8 lg:mt-6">
       {/* Banner container */}
       <div className="relative rounded-2xl lg:rounded-3xl overflow-hidden">
         <div className="relative h-52 sm:h-64 md:h-80 lg:h-96">
           {banners.map((banner, index) => {
-            // Cijela kartica je klikabilna. Link se postavlja u admin panelu (heroLink);
-            // ako nije postavljen, vodi na stranicu proizvoda.
-            const heroHref = banner.heroLink?.trim() || (banner.id !== 'default' ? `/product/${banner.slug || banner.id}` : '')
-            const cardMedia = banner.image && isImageUrl(banner.image) ? (
+            // Cijela kartica je klikabilna ako je link postavljen u admin panelu.
+            const heroHref = banner.link?.trim() || ''
+            const cardMedia = (
               <Image
                 src={banner.image}
-                alt={banner.name || ''}
+                alt="Hero baner"
                 fill
                 sizes="(max-width: 640px) 92vw, (max-width: 1280px) 96vw, 1216px"
                 priority={index === 0}
                 className="object-fill"
               />
-            ) : (
-              <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-primary/20 to-accent/20">
-                <span className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl drop-shadow-lg transition-all duration-500 ${
-                  index === current ? 'scale-100 rotate-0' : 'scale-75 rotate-12'
-                }`}>{banner.image}</span>
-              </div>
             )
             return (
-            <div
-              key={banner.id}
-              className={`absolute inset-0 transition-all duration-700 ease-out ${
-                index === current 
-                  ? 'opacity-100 scale-100 translate-x-0' 
-                  : index < current 
-                    ? 'opacity-0 scale-95 -translate-x-8 pointer-events-none' 
-                    : 'opacity-0 scale-95 translate-x-8 pointer-events-none'
-              }`}
-            >
-              {/* Kartica sadrži SAMO sliku — bez teksta i bez dugmadi.
-                  Slika se razvlači (object-fill) da popuni karticu i nikad se ne reže.
-                  Preporučena dimenzija: 1216×384 px (odnos ~3,17:1) — vidi upozorenje u admin panelu. */}
-              {heroHref ? (
-                <Link href={heroHref} className="absolute inset-0 block" aria-label={banner.name || 'Baner'}>
-                  {cardMedia}
-                </Link>
-              ) : (
-                cardMedia
-              )}
-            </div>
+              <div
+                key={banner.id}
+                className={`absolute inset-0 transition-all duration-700 ease-out ${
+                  index === current
+                    ? 'opacity-100 scale-100 translate-x-0'
+                    : index < current
+                      ? 'opacity-0 scale-95 -translate-x-8 pointer-events-none'
+                      : 'opacity-0 scale-95 translate-x-8 pointer-events-none'
+                }`}
+              >
+                {/* Kartica sadrži SAMO sliku — bez teksta i bez dugmadi.
+                    Slika se razvlači (object-fill) da popuni karticu i nikad se ne reže.
+                    Preporučena dimenzija: 1216×384 px (odnos ~3,17:1) — vidi upozorenje u admin panelu. */}
+                {heroHref ? (
+                  <Link href={heroHref} className="absolute inset-0 block" aria-label="Hero baner">
+                    {cardMedia}
+                  </Link>
+                ) : (
+                  cardMedia
+                )}
+              </div>
             )
           })}
         </div>
@@ -106,8 +108,8 @@ export default function HeroBanner() {
                 key={index}
                 onClick={() => setCurrent(index)}
                 className={`rounded-full transition-all duration-300 ${
-                  index === current 
-                    ? 'bg-primary w-4 sm:w-5 lg:w-6 h-1.5 sm:h-2' 
+                  index === current
+                    ? 'bg-primary w-4 sm:w-5 lg:w-6 h-1.5 sm:h-2'
                     : 'bg-muted/30 hover:bg-muted/50 w-1.5 sm:w-2 h-1.5 sm:h-2'
                 }`}
                 aria-label={`Idi na slajd ${index + 1}`}

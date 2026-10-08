@@ -662,7 +662,11 @@ export const subscribeToProductViews = (callback: (views: ProductView[]) => void
   })
 }
 
-// Banners (reklamni baneri na početnoj — npr. "Flash ponude")
+// Baneri na početnoj strani.
+// Tip 'hero' → slika u glavnom slajderu na vrhu (HeroBanner).
+// Tip 'promo' → reklamni baner ispod sekcija (PromoBanner).
+export type BannerType = 'hero' | 'promo'
+
 export interface Banner {
   id?: string
   image: string
@@ -670,6 +674,10 @@ export interface Banner {
   link?: string
   /** Samo aktivni baneri se prikazuju na sajtu. */
   active?: boolean
+  /** Gdje se baner prikazuje: 'hero' (slajder na vrhu) ili 'promo' (reklamni ispod). Stari zapisi bez tipa = 'promo'. */
+  type?: BannerType
+  /** Redoslijed prikazivanja (manji broj = ranije). Hero slajder sortira po ovom polju. */
+  order?: number
   createdAt?: number
   updatedAt?: number
 }
@@ -724,7 +732,13 @@ export const subscribeToBanners = (callback: (banners: Banner[]) => void) => {
   }
   return onValue(ref(db, 'banners'), (snapshot) => {
     const banners = objectToArray<Banner>(snapshot.val())
-    callback(banners.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)))
+    // Prioritet: ručni `order`, pa onda vremenski redoslijeda kreiranja.
+    callback(banners.sort((a, b) => {
+      const ao = a.order ?? Number.MAX_SAFE_INTEGER
+      const bo = b.order ?? Number.MAX_SAFE_INTEGER
+      if (ao !== bo) return ao - bo
+      return (a.createdAt || 0) - (b.createdAt || 0)
+    }))
   }, (error) => {
     console.error('[Realtime DB] Banners subscription error:', error)
     callback([])
