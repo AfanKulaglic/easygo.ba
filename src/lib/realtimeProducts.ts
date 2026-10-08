@@ -58,6 +58,8 @@ export interface Product {
   isFlashDeal?: boolean
   showInHero?: boolean
   heroSubtitle?: string
+  /** URL na koji vodi klik na hero karticu (npr. /products/category/rasprodaja ili https://...). Ako je prazno, vodi na stranicu proizvoda. */
+  heroLink?: string
   colors?: string[]
   features?: string[]
   variants?: ProductVariant[]

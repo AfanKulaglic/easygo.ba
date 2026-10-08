@@ -1765,6 +1765,7 @@ function ProductModal({
     isFlashDeal: product?.isFlashDeal || false,
     showInHero: product?.showInHero || false,
     heroSubtitle: product?.heroSubtitle || '',
+    heroLink: product?.heroLink || '',
     features: product?.features?.join('\n') || '',
     productReviews: product?.productReviews || [] as { id: string; name: string; rating: number; comment: string; date: string; avatar?: string }[],
     variants: product?.variants || [] as ProductVariant[],
@@ -1911,6 +1912,7 @@ function ProductModal({
       soldPercent: formData.soldPercent || undefined,
       badge: formData.badge as Product['badge'] || undefined,
       heroSubtitle: formData.heroSubtitle || undefined,
+      heroLink: formData.heroLink.trim() || undefined,
       subcategoryId: formData.subcategoryId || undefined,
       subcategorySlug: formData.subcategorySlug || undefined,
       productReviews: formData.productReviews.length > 0 ? formData.productReviews : undefined,
@@ -2699,6 +2701,21 @@ function ProductModal({
                         placeholder="npr. Bestseller"
                         className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-text placeholder:text-muted/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                       />
+                    </div>
+                  )}
+                  {formData.showInHero && (
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm text-muted mb-1.5">Hero link (kuda vodi klik na karticu)</label>
+                      <input
+                        type="text"
+                        value={formData.heroLink}
+                        onChange={e => setFormData({...formData, heroLink: e.target.value})}
+                        placeholder="/products/category/rasprodaja ili https://..."
+                        className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-text placeholder:text-muted/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                      />
+                      <p className="text-[11px] text-muted mt-1.5">
+                        Klik bilo gdje na hero karticu vodi na ovaj link. Ako je prazno, vodi na stranicu ovog proizvoda.
+                      </p>
                     </div>
                   )}
 

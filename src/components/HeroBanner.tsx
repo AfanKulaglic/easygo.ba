@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useHeroProducts } from '@/hooks/useProducts'
@@ -48,7 +49,27 @@ export default function HeroBanner() {
       {/* Banner container */}
       <div className="relative rounded-2xl lg:rounded-3xl overflow-hidden">
         <div className="relative h-52 sm:h-64 md:h-80 lg:h-96">
-          {banners.map((banner, index) => (
+          {banners.map((banner, index) => {
+            // Cijela kartica je klikabilna. Link se postavlja u admin panelu (heroLink);
+            // ako nije postavljen, vodi na stranicu proizvoda.
+            const heroHref = banner.heroLink?.trim() || (banner.id !== 'default' ? `/product/${banner.slug || banner.id}` : '')
+            const cardMedia = banner.image && isImageUrl(banner.image) ? (
+              <Image
+                src={banner.image}
+                alt={banner.name || ''}
+                fill
+                sizes="(max-width: 640px) 92vw, (max-width: 1280px) 96vw, 1216px"
+                priority={index === 0}
+                className="object-fill"
+              />
+            ) : (
+              <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-primary/20 to-accent/20">
+                <span className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl drop-shadow-lg transition-all duration-500 ${
+                  index === current ? 'scale-100 rotate-0' : 'scale-75 rotate-12'
+                }`}>{banner.image}</span>
+              </div>
+            )
+            return (
             <div
               key={banner.id}
               className={`absolute inset-0 transition-all duration-700 ease-out ${
@@ -62,24 +83,16 @@ export default function HeroBanner() {
               {/* Kartica sadrži SAMO sliku — bez teksta i bez dugmadi.
                   Slika se razvlači (object-fill) da popuni karticu i nikad se ne reže.
                   Preporučena dimenzija: 1216×384 px (odnos ~3,17:1) — vidi upozorenje u admin panelu. */}
-              {banner.image && isImageUrl(banner.image) ? (
-                <Image
-                  src={banner.image}
-                  alt={banner.name || ''}
-                  fill
-                  sizes="(max-width: 640px) 92vw, (max-width: 1280px) 96vw, 1216px"
-                  priority={index === 0}
-                  className="object-fill"
-                />
+              {heroHref ? (
+                <Link href={heroHref} className="absolute inset-0 block" aria-label={banner.name || 'Baner'}>
+                  {cardMedia}
+                </Link>
               ) : (
-                <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-primary/20 to-accent/20">
-                  <span className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl drop-shadow-lg transition-all duration-500 ${
-                    index === current ? 'scale-100 rotate-0' : 'scale-75 rotate-12'
-                  }`}>{banner.image}</span>
-                </div>
+                cardMedia
               )}
             </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
