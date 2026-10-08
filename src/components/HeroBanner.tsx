@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useHeroProducts } from '@/hooks/useProducts'
@@ -60,68 +59,25 @@ export default function HeroBanner() {
                     : 'opacity-0 scale-95 translate-x-8 pointer-events-none'
               }`}
             >
-              <div className="flex h-full">
-                {/* Text content - left side with background */}
-                <div className="w-[55%] sm:w-[50%] lg:w-[45%] bg-gradient-to-br from-surface via-surface to-primary/10 flex flex-col justify-center px-4 sm:px-6 lg:px-10">
-                  <h2 className={`text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-text mb-1 sm:mb-2 lg:mb-3 line-clamp-2 leading-tight transition-all duration-500 delay-100 ${
-                    index === current ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                  }`}>
-                    {banner.name}
-                  </h2>
-                  <p className={`text-[10px] sm:text-xs lg:text-sm text-muted mb-2 sm:mb-3 lg:mb-4 line-clamp-2 transition-all duration-500 delay-200 ${
-                    index === current ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                  }`}>
-                    {banner.heroSubtitle || banner.category || 'Pogledajte ponudu'}
-                  </p>
-                  {banner.id !== 'default' && banner.price && (
-                    <div className={`flex items-baseline gap-1.5 sm:gap-2 lg:gap-3 mb-2 sm:mb-3 lg:mb-4 transition-all duration-500 delay-300 ${
-                      index === current ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                    }`}>
-                      <span className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-primary">
-                        {banner.price.toFixed(2)} KM
-                      </span>
-                      {banner.originalPrice && (
-                        <span className="text-[10px] sm:text-xs lg:text-sm text-muted/70 line-through">
-                          {banner.originalPrice.toFixed(2)} KM
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  <Link
-                    href={banner.id !== 'default' ? `/product/${banner.slug || banner.id}` : '/'}
-                    className={`inline-flex items-center gap-1 bg-primary hover:bg-primary/90 text-white px-3 py-1.5 sm:px-4 sm:py-2 lg:px-5 lg:py-2.5 rounded-full text-[10px] sm:text-xs lg:text-sm font-medium transition-all duration-500 delay-400 hover:scale-105 shadow-lg shadow-primary/25 w-fit ${
-                      index === current ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                    }`}
-                  >
-                    {banner.id !== 'default' ? 'Kupi sada' : 'Pogledaj ponudu'}
-                    <ChevronRight className="w-3 h-3 lg:w-4 lg:h-4" />
-                  </Link>
+              {/* Kartica sadrži SAMO sliku — bez teksta i bez dugmadi.
+                  Slika se razvlači (object-fill) da popuni karticu i nikad se ne reže.
+                  Preporučena dimenzija: 1216×384 px (odnos ~3,17:1) — vidi upozorenje u admin panelu. */}
+              {banner.image && isImageUrl(banner.image) ? (
+                <Image
+                  src={banner.image}
+                  alt={banner.name || ''}
+                  fill
+                  sizes="(max-width: 640px) 92vw, (max-width: 1280px) 96vw, 1216px"
+                  priority={index === 0}
+                  className="object-fill"
+                />
+              ) : (
+                <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-primary/20 to-accent/20">
+                  <span className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl drop-shadow-lg transition-all duration-500 ${
+                    index === current ? 'scale-100 rotate-0' : 'scale-75 rotate-12'
+                  }`}>{banner.image}</span>
                 </div>
-                
-                {/* Image container - right side */}
-                <div className={`w-[45%] sm:w-[50%] lg:w-[55%] relative bg-gradient-to-br from-primary/5 to-accent/10 overflow-hidden transition-all duration-700 ${
-                  index === current ? 'scale-100' : 'scale-110'
-                }`}>
-                  {banner.image && isImageUrl(banner.image) ? (
-                    <Image 
-                      src={banner.image} 
-                      alt={banner.name || ''} 
-                      fill
-                      sizes="(max-width: 640px) 45vw, (max-width: 1024px) 50vw, 55vw"
-                      priority={index === 0}
-                      className={`object-cover transition-transform duration-700 ${
-                        index === current ? 'scale-100' : 'scale-105'
-                      }`}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-primary/20 to-accent/20">
-                      <span className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl drop-shadow-lg transition-all duration-500 ${
-                        index === current ? 'scale-100 rotate-0' : 'scale-75 rotate-12'
-                      }`}>{banner.image}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+              )}
             </div>
           ))}
         </div>

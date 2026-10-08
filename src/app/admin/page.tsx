@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { 
   Package, MessageSquare, FolderOpen, Plus, Pencil, Trash2, 
   X, Eye, ChevronLeft, ChevronDown, Menu, LogOut, Reply, Send, Moon, Sun, Lock, User, Star, ShoppingBag, Bell, Search,
-  BarChart3, TrendingUp, TrendingDown, DollarSign, Users, ShoppingCart, Layers, Mail
+  BarChart3, TrendingUp, TrendingDown, DollarSign, Users, ShoppingCart, Layers, Mail, AlertTriangle
 } from 'lucide-react'
 import Link from 'next/link'
 import { 
@@ -2067,6 +2067,17 @@ function ProductModal({
                   </div>
                   <p className="text-xs text-muted mt-2 text-center sm:text-left">Podržano: http, https ili /putanja (bez base64)</p>
                 </div>
+              </div>
+
+              {/* Upozorenje o dimenzijama slike koja ide na hero karticu na početnoj */}
+              <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
+                <p className="text-[11px] leading-relaxed text-amber-300/90">
+                  <span className="font-semibold">Ako je proizvod na hero kartici (početna):</span> preporučena dimenzija slike je{' '}
+                  <span className="font-semibold">1216×384 px</span> (odnos ~3,17:1), a za retina ekrane{' '}
+                  <span className="font-semibold">2432×768 px</span>. Slika se razvlači da popuni karticu i nikada se ne reže,
+                  pa pri drugačijem odnosu dolazi do izobličenja.
+                </p>
               </div>
             </div>
 
