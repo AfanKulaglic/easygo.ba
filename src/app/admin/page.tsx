@@ -400,7 +400,7 @@ export default function AdminPage() {
         const cleanImages = cleanUrlList(product.images || [])
 
         await updateProduct(product.id, {
-          image: hadBase64Main ? '/assets/images/logo.png' : (isValidMediaUrl(product.image) ? product.image.trim() : '/assets/images/logo.png'),
+          image: hadBase64Main ? '/assets/images/elesonic-favicon.png' : (isValidMediaUrl(product.image) ? product.image.trim() : '/assets/images/elesonic-favicon.png'),
           images: cleanImages,
           videoUrl: hadBase64Video ? '' : (isValidMediaUrl(product.videoUrl) ? product.videoUrl!.trim() : '')
         })
@@ -593,7 +593,7 @@ export default function AdminPage() {
             <div className="flex items-center justify-between">
               <Link href="/" className="flex items-center gap-3">
                 <div className="h-9 w-auto">
-                  <img src="/assets/images/logo.png" alt="Logo" className="h-full w-auto object-contain" />
+                  <img src="/assets/images/elesonic-favicon.png" alt="Logo" className="h-full w-auto object-contain" />
                 </div>
                 <div>
                   <span className="font-semibold text-text text-sm block">Admin Panel</span>

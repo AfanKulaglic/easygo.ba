@@ -94,7 +94,7 @@ export default function LoginPage() {
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-3">
             <div className="h-9 w-9 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center ring-1 ring-white/20">
-              <img src="/assets/images/logo.png" alt="Logo" className="h-5 w-5 object-contain" />
+              <img src="/assets/images/elesonic-favicon.png" alt="Logo" className="h-5 w-5 object-contain" />
             </div>
             <span className="text-white/90 font-bold text-base tracking-tight">Easy Go</span>
           </div>
@@ -124,7 +124,7 @@ export default function LoginPage() {
           <div className="text-left">
             <div className="flex items-center gap-3 mb-12">
               <div className="h-11 w-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center ring-1 ring-white/20">
-                <img src="/assets/images/logo.png" alt="Logo" className="h-7 w-7 object-contain" />
+                <img src="/assets/images/elesonic-favicon.png" alt="Logo" className="h-7 w-7 object-contain" />
               </div>
               <span className="text-white/90 font-bold text-lg tracking-tight">Easy Go</span>
             </div>

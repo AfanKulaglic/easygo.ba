@@ -4,7 +4,7 @@ import { ChevronLeft, Heart, Users, Headphones, TrendingUp, Award } from 'lucide
 
 export const metadata: Metadata = {
   title: 'O nama',
-  description: 'Upoznajte EasyGo - vašu pouzdanu online prodavnicu u BiH. Naša misija, vrijednosti i tim koji stoji iza EasyGo brenda.',
+  description: 'Upoznajte ELESONIC - vašu pouzdanu online prodavnicu u BiH. Naša misija, vrijednosti i tim koji stoji iza ELESONIC brenda.',
   alternates: { canonical: 'https://easygo.ba/o-nama' },
 }
 
@@ -23,7 +23,7 @@ export default function ONamaPage() {
           </Link>
           <div>
             <h1 className="text-xl lg:text-2xl font-bold text-text">O nama</h1>
-            <p className="text-xs text-muted">Upoznajte EasyGo</p>
+            <p className="text-xs text-muted">Upoznajte ELESONIC</p>
           </div>
         </div>
 
@@ -32,9 +32,9 @@ export default function ONamaPage() {
           {/* Hero / Welcome */}
           <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-6 lg:p-8 border border-primary/20 text-center">
             <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
-              <img src="/assets/images/full-logo.png" alt="EasyGo" className="h-8 w-auto" />
+              <img src="/assets/images/elesonic-logo.png" alt="ELESONIC" className="h-8 w-auto" />
             </div>
-            <h2 className="text-lg font-bold text-text mb-3">Dobrodošli u EasyGo</h2>
+            <h2 className="text-lg font-bold text-text mb-3">Dobrodošli u ELESONIC</h2>
             <p className="text-sm text-muted leading-relaxed max-w-lg mx-auto">
               Od samog početka, glavni cilj je bio da našim kupcima pružimo mogućnost uštede vremena nudeći im raznovrstan asortiman proizvoda.
             </p>
@@ -51,7 +51,7 @@ export default function ONamaPage() {
               </div>
             </div>
             <p className="text-sm text-muted leading-relaxed">
-              Online prodaja EasyGo nije samo kupovina putem interneta, već uključuje i pružanje tehničke podrške kupcima. Naš tim stručnjaka je tu da odgovori na sva pitanja i pruži potrebne informacije kako bi kupci donijeli informisanu odluku prilikom kupovine. Na taj način želimo da obezbijedimo najbolje iskustvo kupovine našim kupcima i da im pomognemo da pronađu proizvod koji najbolje odgovara njihovim potrebama.
+              Online prodaja ELESONIC nije samo kupovina putem interneta, već uključuje i pružanje tehničke podrške kupcima. Naš tim stručnjaka je tu da odgovori na sva pitanja i pruži potrebne informacije kako bi kupci donijeli informisanu odluku prilikom kupovine. Na taj način želimo da obezbijedimo najbolje iskustvo kupovine našim kupcima i da im pomognemo da pronađu proizvod koji najbolje odgovara njihovim potrebama.
             </p>
           </div>
 

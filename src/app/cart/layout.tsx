@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Korpa',
-  description: 'Vaša korpa na EasyGo online shopu. Pregledajte proizvode i nastavite sa narudžbom.',
+  description: 'Vaša korpa na ELESONIC online shopu. Pregledajte proizvode i nastavite sa narudžbom.',
   robots: { index: false, follow: true },
 }
 

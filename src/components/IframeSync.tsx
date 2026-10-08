@@ -25,7 +25,7 @@ function IframeSyncInner() {
           window.parent.postMessage({
             type: 'navigation',
             path: fullPath,
-            title: document.title || 'EasyGo Store'
+            title: document.title || 'ELESONIC Store'
           }, '*')
         } catch (e) {
           console.error('[IframeSync] Error sending message:', e)

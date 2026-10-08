@@ -58,7 +58,7 @@ export function Loading3D({ progress = 0, text = 'Učitavanje...', showProgress 
       <div className="text-center w-full max-w-xs px-6">
         
         {/* Brand name above */}
-        <h2 className="text-2xl font-bold text-text mb-10">EasyGo</h2>
+        <h2 className="text-2xl font-bold text-text mb-10">ELESONIC</h2>
 
         {/* Progress bar with logo at the end */}
         {showProgress && (
@@ -90,8 +90,8 @@ export function Loading3D({ progress = 0, text = 'Učitavanje...', showProgress 
                 {/* Logo */}
                 <div className="relative w-10 h-10">
                   <img 
-                    src="/assets/images/logo.png" 
-                    alt="EasyGo" 
+                    src="/assets/images/elesonic-favicon.png" 
+                    alt="ELESONIC" 
                     className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]"
                   />
                 </div>
@@ -122,7 +122,7 @@ export function Loading3DSmall() {
     <div className="flex items-center gap-2">
       <div className="w-6 h-6">
         <img 
-          src="/assets/images/logo.png" 
+          src="/assets/images/elesonic-favicon.png" 
           alt="Loading" 
           className="w-full h-full object-contain animate-pulse"
         />

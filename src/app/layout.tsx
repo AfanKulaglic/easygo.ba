@@ -22,17 +22,17 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL('https://easygo.ba'),
   title: {
-    default: 'EasyGo - Online Shop | Kupovina iz BiH',
-    template: '%s | EasyGo'
+    default: 'ELESONIC - Online Shop | Kupovina iz BiH',
+    template: '%s | ELESONIC'
   },
-  description: 'EasyGo - Vaša pouzdana online prodavnica u Bosni i Hercegovini. Kvalitetni proizvodi po najboljim cijenama sa brzom dostavom širom BiH. Elektronika, moda, kućanski aparati i više.',
-  keywords: ['online shop', 'online prodavnica', 'kupovina online', 'BiH', 'Bosna i Hercegovina', 'easygo', 'brza dostava', 'elektronika', 'povoljne cijene', 'web shop BiH'],
-  authors: [{ name: 'EasyGo' }],
-  creator: 'EasyGo',
-  publisher: 'EasyGo',
+  description: 'ELESONIC - Vaša pouzdana online prodavnica u Bosni i Hercegovini. Kvalitetni proizvodi po najboljim cijenama sa brzom dostavom širom BiH. Elektronika, moda, kućanski aparati i više.',
+  keywords: ['online shop', 'online prodavnica', 'kupovina online', 'BiH', 'Bosna i Hercegovina', 'elesonic', 'brza dostava', 'elektronika', 'povoljne cijene', 'web shop BiH'],
+  authors: [{ name: 'ELESONIC' }],
+  creator: 'ELESONIC',
+  publisher: 'ELESONIC',
   icons: {
-    icon: '/assets/images/logo.png',
-    apple: '/assets/images/logo.png',
+    icon: '/assets/images/elesonic-favicon.png',
+    apple: '/assets/images/elesonic-favicon.png',
   },
   manifest: '/manifest.json',
   alternates: {
@@ -42,21 +42,21 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'bs_BA',
     url: 'https://easygo.ba',
-    title: 'EasyGo - Online Shop | Kupovina iz BiH',
+    title: 'ELESONIC - Online Shop | Kupovina iz BiH',
     description: 'Vaša pouzdana online prodavnica u Bosni i Hercegovini. Kvalitetni proizvodi, brza dostava širom BiH.',
-    siteName: 'EasyGo',
+    siteName: 'ELESONIC',
     images: [{
-      url: '/assets/images/logo.png',
+      url: '/assets/images/elesonic-favicon.png',
       width: 512,
       height: 512,
-      alt: 'EasyGo Logo',
+      alt: 'ELESONIC Logo',
     }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'EasyGo - Online Shop | Kupovina iz BiH',
+    title: 'ELESONIC - Online Shop | Kupovina iz BiH',
     description: 'Vaša pouzdana online prodavnica u Bosni i Hercegovini.',
-    images: ['/assets/images/logo.png'],
+    images: ['/assets/images/elesonic-favicon.png'],
   },
   robots: {
     index: true,
@@ -103,9 +103,9 @@ export default function RootLayout({
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'Organization',
-              name: 'EasyGo',
+              name: 'ELESONIC',
               url: 'https://easygo.ba',
-              logo: 'https://easygo.ba/assets/images/logo.png',
+              logo: 'https://easygo.ba/assets/images/elesonic-favicon.png',
               description: 'Online prodavnica u Bosni i Hercegovini sa brzom dostavom širom BiH.',
               address: {
                 '@type': 'PostalAddress',
@@ -121,7 +121,7 @@ export default function RootLayout({
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'WebSite',
-              name: 'EasyGo',
+              name: 'ELESONIC',
               url: 'https://easygo.ba',
               potentialAction: {
                 '@type': 'SearchAction',
@@ -162,7 +162,7 @@ export default function RootLayout({
               <CartSync />
               <IframeSync />
               <Header />
-              <main className="pt-[64px] lg:pt-[188px] pb-8 flex-1">
+              <main className="pt-[140px] lg:pt-[188px] pb-8 flex-1">
                   {children}
               </main>
               <Footer />

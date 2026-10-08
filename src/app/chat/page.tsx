@@ -132,7 +132,7 @@ export default function ChatPage() {
           <span className="text-2xl">👩‍💼</span>
         </div>
         <div>
-          <p className="text-sm font-medium text-text">EasyGo Podrška</p>
+          <p className="text-sm font-medium text-text">ELESONIC Podrška</p>
           <p className="text-xs text-muted">Obično odgovaramo za par minuta</p>
         </div>
       </div>

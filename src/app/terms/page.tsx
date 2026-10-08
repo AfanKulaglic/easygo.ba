@@ -4,7 +4,7 @@ import { ChevronLeft, FileText, ShoppingCart, Ban, RotateCcw, Scale, AlertTriang
 
 export const metadata: Metadata = {
   title: 'Uslovi korištenja',
-  description: 'Uslovi korištenja EasyGo online shopa. Pravila kupovine, povrata i korištenja web stranice.',
+  description: 'Uslovi korištenja ELESONIC online shopa. Pravila kupovine, povrata i korištenja web stranice.',
   alternates: { canonical: 'https://easygo.ba/terms' },
 }
 
@@ -39,7 +39,7 @@ export default function TermsPage() {
                 <h2 className="text-base font-semibold text-text mb-1">Opći uslovi</h2>
                 <div className="text-sm text-muted leading-relaxed space-y-2">
                   <p>
-                    Korištenjem web stranice EasyGo (u daljem tekstu: &quot;stranica&quot;) prihvatate ove uslove korištenja u cijelosti. Ako se ne slažete s bilo kojim dijelom ovih uslova, molimo vas da ne koristite stranicu.
+                    Korištenjem web stranice ELESONIC (u daljem tekstu: &quot;stranica&quot;) prihvatate ove uslove korištenja u cijelosti. Ako se ne slažete s bilo kojim dijelom ovih uslova, molimo vas da ne koristite stranicu.
                   </p>
                   <p>
                     Zadržavamo pravo izmjene ovih uslova u bilo kojem trenutku. Promjene stupaju na snagu objavljivanjem na stranici. Nastavak korištenja stranice nakon objave promjena smatra se prihvatanjem novih uslova.

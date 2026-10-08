@@ -4,7 +4,7 @@ import { ChevronLeft, Shield, Eye, Database, Cookie, UserCheck, Trash2, Mail } f
 
 export const metadata: Metadata = {
   title: 'Politika privatnosti',
-  description: 'Politika privatnosti EasyGo online shopa. Saznajte kako štitimo vaše lične podatke i kako ih koristimo.',
+  description: 'Politika privatnosti ELESONIC online shopa. Saznajte kako štitimo vaše lične podatke i kako ih koristimo.',
   alternates: { canonical: 'https://easygo.ba/privacy' },
 }
 
@@ -38,7 +38,7 @@ export default function PrivacyPage() {
               <div>
                 <h2 className="text-base font-semibold text-text mb-1">Uvod</h2>
                 <p className="text-sm text-muted leading-relaxed">
-                  EasyGo (u daljem tekstu: &quot;mi&quot;, &quot;naš&quot; ili &quot;stranica&quot;) poštuje privatnost svojih korisnika. Ova politika privatnosti objašnjava koje podatke prikupljamo, kako ih koristimo i kako ih štitimo, u skladu s Općom uredbom o zaštiti podataka (GDPR) i ePrivacy Direktivom Evropske unije.
+                  ELESONIC (u daljem tekstu: &quot;mi&quot;, &quot;naš&quot; ili &quot;stranica&quot;) poštuje privatnost svojih korisnika. Ova politika privatnosti objašnjava koje podatke prikupljamo, kako ih koristimo i kako ih štitimo, u skladu s Općom uredbom o zaštiti podataka (GDPR) i ePrivacy Direktivom Evropske unije.
                 </p>
               </div>
             </div>

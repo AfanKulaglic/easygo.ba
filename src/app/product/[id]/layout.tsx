@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         const title = product.name
         const description = product.description
           ? product.description.substring(0, 160).replace(/<[^>]*>/g, '')
-          : `Kupite ${product.name} po najboljoj cijeni na EasyGo.ba`
+          : `Kupite ${product.name} po najboljoj cijeni na ELESONIC.ba`
         const price = product.price
 
         return {
@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             canonical: `https://easygo.ba/product/${product.slug || product.id}`,
           },
           openGraph: {
-            title: `${product.name} | EasyGo`,
+            title: `${product.name} | ELESONIC`,
             description,
             url: `https://easygo.ba/product/${product.slug || product.id}`,
             images: product.image ? [{ url: product.image, alt: product.name }] : [],
@@ -77,7 +77,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: 'Proizvod',
-    description: 'Pogledajte detalje proizvoda na EasyGo online shopu.',
+    description: 'Pogledajte detalje proizvoda na ELESONIC online shopu.',
   }
 }
 

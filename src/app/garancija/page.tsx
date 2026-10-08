@@ -4,7 +4,7 @@ import { ChevronLeft, Shield, CheckCircle, XCircle, Package, Phone, Mail } from 
 
 export const metadata: Metadata = {
   title: 'Garancija',
-  description: 'Informacije o garanciji na proizvode kupljene u EasyGo online shopu. Garantni uslovi i procedura reklamacije.',
+  description: 'Informacije o garanciji na proizvode kupljene u ELESONIC online shopu. Garantni uslovi i procedura reklamacije.',
   alternates: { canonical: 'https://easygo.ba/garancija' },
 }
 

@@ -12,7 +12,7 @@ export default function Footer() {
           {/* Logo & About */}
           <div className="col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <Image src="/assets/images/full-logo.png" alt="EasyGo" width={120} height={32} className="h-8 w-auto" />
+              <Image src="/assets/images/elesonic-logo.png" alt="ELESONIC" width={120} height={32} className="h-8 w-auto" />
             </Link>
             <p className="text-sm text-muted leading-relaxed mb-4">
               Vaša pouzdana online destinacija za kupovinu. Kvalitetni proizvodi po najboljim cijenama.
@@ -112,7 +112,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-white/5 mt-8 pt-6 flex items-center justify-between">
           <p className="text-xs text-muted">
-            © {currentYear} EasyGo. Sva prava zadržana.
+            © {currentYear} ELESONIC. Sva prava zadržana.
           </p>
           <div className="flex items-center gap-4">
             <span className="text-xs text-muted">Plaćanje pouzećem</span>

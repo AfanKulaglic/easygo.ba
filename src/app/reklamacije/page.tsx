@@ -4,7 +4,7 @@ import { ChevronLeft, AlertTriangle, Camera, Clock, Phone, Mail, PackageX, Check
 
 export const metadata: Metadata = {
   title: 'Reklamacije',
-  description: 'Procedura za podnošenje reklamacija u EasyGo online shopu. Kako prijaviti problem sa proizvodom i ostvariti svoja prava.',
+  description: 'Procedura za podnošenje reklamacija u ELESONIC online shopu. Kako prijaviti problem sa proizvodom i ostvariti svoja prava.',
   alternates: { canonical: 'https://easygo.ba/reklamacije' },
 }
 

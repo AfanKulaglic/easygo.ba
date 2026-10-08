@@ -666,7 +666,7 @@ export default function ProfilePage() {
                     <Smartphone className="w-4 h-4 text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-text font-medium">EasyGo App</p>
+                    <p className="text-sm text-text font-medium">ELESONIC App</p>
                     <p className="text-xs text-muted">Verzija 1.0.0</p>
                   </div>
                 </div>

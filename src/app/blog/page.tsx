@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { ChevronLeft, Newspaper, Tag, Wrench } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Blog | EasyGo',
-  description: 'Najnovije vijesti, kampanje i savjeti iz EasyGo prodavnice.',
+  title: 'Blog | ELESONIC',
+  description: 'Najnovije vijesti, kampanje i savjeti iz ELESONIC prodavnice.',
   alternates: { canonical: 'https://easygo.ba/blog' },
 }
 
@@ -18,7 +18,7 @@ const posts = [
   {
     icon: Newspaper,
     title: 'Novi proizvodi u ponudi',
-    excerpt: 'Redovno proširujemo asortiman — pogledajte šta je novo u EasyGo prodavnici.',
+    excerpt: 'Redovno proširujemo asortiman — pogledajte šta je novo u ELESONIC prodavnici.',
     href: '/products?filter=new',
   },
   {
@@ -44,7 +44,7 @@ export default function BlogPage() {
           </Link>
           <div>
             <h1 className="text-xl lg:text-2xl font-bold text-text">Blog</h1>
-            <p className="text-xs text-muted">Vijesti i savjeti iz EasyGo</p>
+            <p className="text-xs text-muted">Vijesti i savjeti iz ELESONIC</p>
           </div>
         </div>
 

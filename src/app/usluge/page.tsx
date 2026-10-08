@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { ChevronLeft, Wrench, Package, Headphones, Truck } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Usluge | EasyGo',
-  description: 'Usluge EasyGo prodavnice - servis, posebne narudžbe, dostava i tehnička podrška.',
+  title: 'Usluge | ELESONIC',
+  description: 'Usluge ELESONIC prodavnice - servis, posebne narudžbe, dostava i tehnička podrška.',
   alternates: { canonical: 'https://easygo.ba/usluge' },
 }
 
@@ -46,7 +46,7 @@ export default function UslugePage() {
           </Link>
           <div>
             <h1 className="text-xl lg:text-2xl font-bold text-text">Usluge</h1>
-            <p className="text-xs text-muted">Šta vam EasyGo nudi</p>
+            <p className="text-xs text-muted">Šta vam ELESONIC nudi</p>
           </div>
         </div>
 
@@ -57,7 +57,7 @@ export default function UslugePage() {
             <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
               <Wrench className="w-8 h-8 text-primary" />
             </div>
-            <h2 className="text-lg font-bold text-text mb-3">Usluge EasyGo prodavnice</h2>
+            <h2 className="text-lg font-bold text-text mb-3">Usluge ELESONIC prodavnice</h2>
             <p className="text-sm text-muted leading-relaxed max-w-lg mx-auto">
               Više od prodaje — nudimo kompletan servis i podršku za sve vaše potrebe.
             </p>

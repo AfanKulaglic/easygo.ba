@@ -229,7 +229,7 @@ export default function SettingsPage() {
             <Smartphone className="w-4 h-4 text-accent" />
           </div>
           <div>
-            <span className="text-sm text-text font-medium block">EasyGo App</span>
+            <span className="text-sm text-text font-medium block">ELESONIC App</span>
             <span className="text-[11px] text-muted">Verzija 1.0.0</span>
           </div>
         </div>

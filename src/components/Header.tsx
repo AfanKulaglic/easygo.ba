@@ -55,6 +55,15 @@ export default function Header() {
     { href: '/contact', icon: Phone, label: 'Kontakt' },
   ]
 
+  // Mobile quick-nav — mirrors the desktop navigation row (RED 2)
+  const mobileNavItems = [
+    { href: '/', label: 'Početna', active: pathname === '/', accent: false },
+    { href: '/products?filter=sale', label: 'Akcije', active: false, accent: true },
+    { href: '/products?filter=new', label: 'Novo', active: false, accent: false },
+    { href: '/blog', label: 'Blog', active: pathname.startsWith('/blog'), accent: false },
+    { href: '/contact', label: 'Kontakt', active: pathname.startsWith('/contact'), accent: false },
+  ]
+
   // Search products
   useEffect(() => {
     if (searchQuery.trim().length > 1) {
@@ -387,6 +396,31 @@ export default function Header() {
       </div>
 
       <header className="fixed top-0 left-0 right-0 z-50 shadow-sm">
+        {/* MOBILNA TRUST TRAKA — ekvivalent desktop RED 0 */}
+        <div className={`lg:hidden bg-surface border-b border-white/10 overflow-hidden ${isFocused ? 'hidden' : ''}`}>
+          <div className="flex items-center gap-3 px-4 h-8 overflow-x-auto scrollbar-hide whitespace-nowrap text-[11px] font-medium text-text">
+            <span className="flex items-center gap-1.5 shrink-0">
+              <Truck className="w-3.5 h-3.5 text-primary" />
+              Brza dostava 24-48h
+            </span>
+            <span className="w-px h-3.5 bg-white/10 shrink-0" />
+            <span className="flex items-center gap-1.5 shrink-0">
+              <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+              6 mjeseci garancije
+            </span>
+            <span className="w-px h-3.5 bg-white/10 shrink-0" />
+            <span className="flex items-center gap-1.5 shrink-0">
+              <Headphones className="w-3.5 h-3.5 text-primary" />
+              Podrška nakon kupovine
+            </span>
+            <span className="w-px h-3.5 bg-white/10 shrink-0" />
+            <span className="flex items-center gap-1.5 shrink-0 text-muted">
+              <MapPin className="w-3.5 h-3.5 text-primary" />
+              BiH · KM
+            </span>
+          </div>
+        </div>
+
         {/* RED 0 - info traka (trust + država/valuta) */}
         <div className="hidden lg:block bg-surface border-b border-white/10">
           <div className="max-w-7xl mx-auto flex items-center justify-between px-4 lg:px-8 h-10">
@@ -427,8 +461,8 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className={`items-center flex-shrink-0 ${isFocused ? 'hidden lg:flex' : 'flex'}`}>
               <img
-                src="/assets/images/full-logo.png"
-                alt="EasyGo"
+                src="/assets/images/elesonic-logo.png"
+                alt="ELESONIC"
                 className="h-8 lg:h-10 w-auto object-contain"
               />
             </Link>
@@ -679,7 +713,7 @@ export default function Header() {
               {/* Theme toggle - kružno dugme */}
               <button
                 onClick={toggleTheme}
-                className="hidden lg:flex items-center justify-center w-10 h-10 rounded-full bg-background border border-white/10 hover:bg-white/5 transition-colors"
+                className={`${isFocused ? 'hidden' : 'flex'} items-center justify-center w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-background border border-white/10 hover:bg-white/5 transition-colors shrink-0`}
                 aria-label="Toggle theme"
               >
                 {isDark ? <Moon className="w-5 h-5 text-text" /> : <Sun className="w-5 h-5 text-text" />}
@@ -765,6 +799,37 @@ export default function Header() {
                 <Menu className="w-5 h-5 text-text" />
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* MOBILNA NAVIGACIJA — ekvivalent desktop RED 2 (kategorije + glavni linkovi) */}
+        <div className={`lg:hidden bg-surface border-b border-white/10 ${isFocused ? 'hidden' : ''}`}>
+          <div className="flex items-center gap-2 px-4 h-11 overflow-x-auto scrollbar-hide">
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              className="shrink-0 flex items-center gap-1.5 bg-primary hover:opacity-90 text-white text-[12px] font-semibold px-3 h-7 rounded-lg transition-opacity"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              Sve kategorije
+              <ChevronDown className="w-3 h-3" />
+            </button>
+
+            {mobileNavItems.map(({ href, label, accent, active }) => (
+              <Link
+                key={href}
+                href={href}
+                className={`shrink-0 flex items-center h-7 px-3 rounded-lg text-[12px] font-medium whitespace-nowrap border transition-colors ${
+                  active
+                    ? 'bg-primary/10 text-primary border-primary/30'
+                    : accent
+                      ? 'bg-orange-500/10 text-orange-500 border-orange-500/30 font-semibold'
+                      : 'text-text border-white/10 hover:bg-white/5'
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
           </div>
         </div>
 

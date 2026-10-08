@@ -4,7 +4,7 @@ import { ChevronLeft, Truck, MapPin, Package, Search, Headphones, CreditCard, Ca
 
 export const metadata: Metadata = {
   title: 'Dostava',
-  description: 'Informacije o dostavi narudžbi iz EasyGo online shopa. Brza i sigurna dostava širom Bosne i Hercegovine.',
+  description: 'Informacije o dostavi narudžbi iz ELESONIC online shopa. Brza i sigurna dostava širom Bosne i Hercegovine.',
   alternates: { canonical: 'https://easygo.ba/dostava' },
 }
 

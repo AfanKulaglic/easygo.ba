@@ -488,7 +488,7 @@ export default function ProductPage() {
                   <img src={currentImage} alt={displayProduct.name} className="w-full h-full object-contain drop-shadow-2xl" />
                 ) : (
                   <div className="text-muted text-center flex flex-col items-center justify-center">
-                    <img src="/assets/images/logo.png" alt={displayProduct.name} className="w-24 h-24 lg:w-32 lg:h-32 object-contain opacity-30 mb-2" />
+                    <img src="/assets/images/elesonic-favicon.png" alt={displayProduct.name} className="w-24 h-24 lg:w-32 lg:h-32 object-contain opacity-30 mb-2" />
                   </div>
                 )}
               </div>
