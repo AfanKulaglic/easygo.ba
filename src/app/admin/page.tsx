@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { 
   Package, MessageSquare, FolderOpen, Plus, Pencil, Trash2, 
-  X, Eye, ChevronLeft, ChevronDown, Menu, LogOut, Reply, Send, Moon, Sun, Lock, User, Star, ShoppingBag, Bell, Search,
+  X, Eye, EyeOff, ChevronLeft, ChevronDown, Menu, LogOut, Reply, Send, Moon, Sun, Lock, User, Star, ShoppingBag, Bell, Search,
   BarChart3, TrendingUp, TrendingDown, DollarSign, Users, ShoppingCart, Layers, Mail, AlertTriangle
 } from 'lucide-react'
 import Link from 'next/link'
@@ -110,6 +110,7 @@ export default function AdminPage() {
   const [showBannerForm, setShowBannerForm] = useState(false)
   const [savingBanner, setSavingBanner] = useState(false)
   const [bannerForm, setBannerForm] = useState({ image: '', link: '', active: true, type: 'promo' as BannerType, order: 0 })
+  const [bannerFilter, setBannerFilter] = useState<'all' | 'hero' | 'promo'>('all')
 
   // Handle login
   const handleLogin = (e: React.FormEvent) => {
@@ -503,6 +504,78 @@ export default function AdminPage() {
     if (confirm('Jeste li sigurni da želite obrisati ovaj baner?')) {
       await deleteBanner(id)
     }
+  }
+
+  const handleToggleBannerActive = async (banner: Banner) => {
+    if (banner.id) {
+      await updateBanner(banner.id, { active: !(banner.active ?? true) })
+    }
+  }
+
+  const renderBannerCard = (banner: Banner) => {
+    const isHero = (banner.type || 'promo') === 'hero'
+    return (
+      <div key={banner.id} className={`bg-surface rounded-xl border border-white/5 p-3 flex flex-col sm:flex-row gap-3 ${
+        (banner.active ?? true) ? '' : 'opacity-60'
+      }`}>
+        {/* Thumbnail */}
+        <div className="w-full sm:w-44 h-24 bg-background rounded-xl overflow-hidden shrink-0">
+          <img src={banner.image} alt="Baner" className="w-full h-full object-fill" />
+        </div>
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+              isHero ? 'bg-primary/20 text-primary' : 'bg-accent/20 text-accent'
+            }`}>
+              {isHero ? '⭐ Hero' : 'Reklamni'}
+            </span>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+              (banner.active ?? true) ? 'bg-accent/20 text-accent' : 'bg-white/10 text-muted'
+            }`}>
+              {(banner.active ?? true) ? 'Aktivno' : 'Neaktivno'}
+            </span>
+            {isHero && (
+              <span className="text-[10px] text-muted">Slajd #{(banner.order ?? 0) + 1}</span>
+            )}
+          </div>
+          <p className="text-xs text-muted truncate mt-2">
+            {banner.link ? `Klik vodi na: ${banner.link}` : 'Bez linka (nije klikabilno)'}
+          </p>
+          <p className="text-[10px] text-muted/70 truncate mt-0.5">
+            {toDate(banner.updatedAt)?.toLocaleDateString('bs-BA') || toDate(banner.createdAt)?.toLocaleDateString('bs-BA') || ''}
+          </p>
+          {/* Akcije */}
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={() => handleToggleBannerActive(banner)}
+              className={`p-2 rounded-lg transition-colors ${
+                (banner.active ?? true)
+                  ? 'bg-white/5 hover:bg-white/10 text-muted'
+                  : 'bg-accent/10 hover:bg-accent/20 text-accent'
+              }`}
+              title={(banner.active ?? true) ? 'Deaktiviraj' : 'Aktiviraj'}
+            >
+              {(banner.active ?? true) ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={() => openEditBanner(banner)}
+              className="p-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors"
+              title="Uredi"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => banner.id && handleDeleteBanner(banner.id)}
+              className="p-2 bg-danger/10 hover:bg-danger/20 text-danger rounded-lg transition-colors"
+              title="Obriši"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const tabs = [
@@ -1675,30 +1748,54 @@ export default function AdminPage() {
 
             {/* Banners Tab */}
             {activeTab === 'banners' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
+              <div>
+                {/* Header — konzistentan sa ostalim tabovima */}
+                <div className="flex items-center justify-between mb-4 lg:mb-6">
                   <div>
-                    <h2 className="text-lg font-semibold text-text">🖼 Baneri</h2>
-                    <p className="text-[11px] text-muted mt-0.5">Reklamni baner na početnoj strani</p>
+                    <h2 className="text-lg lg:text-xl font-semibold text-text">Baneri</h2>
+                    <p className="text-xs text-muted mt-0.5 hidden lg:block">Hero slajder i reklamni baneri na početnoj</p>
                   </div>
-                  <button
-                    onClick={() => openNewBanner('hero')}
-                    className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white px-3 lg:px-4 py-2 rounded-xl transition-colors shadow-lg shadow-primary/25 text-sm"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span className="hidden sm:inline">Hero</span>
-                  </button>
-                  <button
-                    onClick={() => openNewBanner('promo')}
-                    className="flex items-center gap-1.5 bg-accent hover:bg-accent/90 text-white px-3 lg:px-4 py-2 rounded-xl transition-colors shadow-lg shadow-accent/25 text-sm"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span className="hidden sm:inline">Reklamni</span>
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openNewBanner('hero')}
+                      className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white px-3 lg:px-4 py-2 lg:py-2.5 rounded-xl transition-colors shadow-lg shadow-primary/25 text-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span className="hidden sm:inline">Hero</span>
+                    </button>
+                    <button
+                      onClick={() => openNewBanner('promo')}
+                      className="flex items-center gap-1.5 bg-accent hover:bg-accent/90 text-white px-3 lg:px-4 py-2 lg:py-2.5 rounded-xl transition-colors shadow-lg shadow-accent/25 text-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span className="hidden sm:inline">Reklamni</span>
+                    </button>
+                  </div>
                 </div>
 
-                {/* Upozorenja o dimenzijama — po tipu */}
-                <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2">
+                {/* Filteri — chips */}
+                <div className="flex gap-2 mb-4">
+                  {([
+                    { id: 'all' as const, label: 'Svi', count: banners.length },
+                    { id: 'hero' as const, label: '⭐ Hero', count: banners.filter(b => (b.type || 'promo') === 'hero').length },
+                    { id: 'promo' as const, label: 'Reklamni', count: banners.filter(b => (b.type || 'promo') === 'promo').length },
+                  ]).map(f => (
+                    <button
+                      key={f.id}
+                      onClick={() => setBannerFilter(f.id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                        bannerFilter === f.id
+                          ? 'bg-primary/10 border-primary/30 text-primary'
+                          : 'bg-surface border-white/10 text-muted hover:border-white/20'
+                      }`}
+                    >
+                      {f.label} ({f.count})
+                    </button>
+                  ))}
+                </div>
+
+                {/* Upozorenje o dimenzijama */}
+                <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 mb-4">
                   <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
                   <p className="text-[11px] leading-relaxed text-amber-300/90">
                     Hero baner (slajder na vrhu): preporučeno <span className="font-semibold">1216×384 px</span> (retina <span className="font-semibold">2432×768 px</span>). Reklamni baner (ispod): <span className="font-semibold">1216×208 px</span> (retina <span className="font-semibold">2432×416 px</span>).{' '}
@@ -1709,27 +1806,40 @@ export default function AdminPage() {
 
                 {/* Forma */}
                 {showBannerForm && (
-                  <form onSubmit={handleSaveBanner} className="bg-surface rounded-2xl border border-white/5 p-4 space-y-4">
-                    <h3 className="text-sm font-semibold text-text">{editingBanner ? 'Uredi baner' : (bannerForm.type === 'hero' ? 'Novi hero baner' : 'Novi reklamni baner')}</h3>
+                  <form onSubmit={handleSaveBanner} className="bg-surface rounded-2xl border border-white/5 p-4 space-y-4 mb-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-text">{editingBanner ? 'Uredi baner' : (bannerForm.type === 'hero' ? 'Novi hero baner' : 'Novi reklamni baner')}</h3>
+                      <button
+                        type="button"
+                        onClick={() => { setShowBannerForm(false); setEditingBanner(null) }}
+                        className="p-1.5 rounded-lg text-muted hover:bg-white/5 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
                     <div className="flex flex-col sm:flex-row gap-4">
-                      <div className="w-full sm:w-44 h-24 bg-background rounded-xl overflow-hidden border border-white/10 flex items-center justify-center shrink-0">
+                      {/* Preview */}
+                      <div className="w-full sm:w-48 h-28 bg-background rounded-xl overflow-hidden border border-white/10 flex items-center justify-center shrink-0">
                         {isValidMediaUrl(bannerForm.image) ? (
                           <img src={bannerForm.image} alt="Preview" className="w-full h-full object-fill" />
                         ) : (
-                          <span className="text-xs text-muted">Nema slike</span>
+                          <div className="text-center">
+                            <Layers className="w-6 h-6 text-muted mx-auto mb-1" />
+                            <span className="text-[10px] text-muted">Nema slike</span>
+                          </div>
                         )}
                       </div>
                       <div className="flex-1 space-y-3">
-                        {/* Tip banera */}
+                        {/* Tip — segmented control */}
                         <div>
-                          <label className="block text-sm text-muted mb-1.5">Tip banera *</label>
+                          <label className="block text-xs text-muted mb-1.5">Tip banera *</label>
                           <div className="grid grid-cols-2 gap-2">
                             <button
                               type="button"
                               onClick={() => setBannerForm({ ...bannerForm, type: 'hero' })}
-                              className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${
+                              className={`px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all border ${
                                 bannerForm.type === 'hero'
-                                  ? 'bg-primary/15 border-primary text-primary'
+                                  ? 'bg-primary/15 border-primary/40 text-primary'
                                   : 'bg-background border-white/10 text-muted hover:border-white/20'
                               }`}
                             >
@@ -1738,53 +1848,57 @@ export default function AdminPage() {
                             <button
                               type="button"
                               onClick={() => setBannerForm({ ...bannerForm, type: 'promo' })}
-                              className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${
+                              className={`px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all border ${
                                 bannerForm.type === 'promo'
-                                  ? 'bg-accent/15 border-accent text-accent'
+                                  ? 'bg-accent/15 border-accent/40 text-accent'
                                   : 'bg-background border-white/10 text-muted hover:border-white/20'
                               }`}
                             >
                               🖼 Reklamni (ispod)
                             </button>
                           </div>
-                          <p className="text-[11px] text-muted mt-1.5">Hero = velika slika u slajderu na vrhu početne. Reklamni = uski baner ispod sekcija.</p>
                         </div>
+                        {/* Slika */}
                         <div>
-                          <label className="block text-sm text-muted mb-1.5">Slika banera (link) *</label>
+                          <label className="block text-xs text-muted mb-1.5">Slika banera (link) *</label>
                           <input
                             type="url"
                             value={bannerForm.image}
                             onChange={e => setBannerForm({ ...bannerForm, image: e.target.value })}
                             placeholder="https://.../baner.webp"
-                            className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-primary"
+                            className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-primary"
                             required
                           />
-                          <p className="text-[11px] text-muted mt-1.5">Zalijepi direktan link do slike (https://…), isti princip kao slike proizvoda — preporučeno webp ili jpg.</p>
+                          <p className="text-[11px] text-muted mt-1">
+                            Preporučeno: {bannerForm.type === 'hero' ? '1216×384 px (retina 2432×768 px)' : '1216×208 px (retina 2432×416 px)'} — webp ili jpg.
+                          </p>
                         </div>
+                        {/* Klik link */}
                         <div>
-                          <label className="block text-sm text-muted mb-1.5">Klik link (opciono)</label>
+                          <label className="block text-xs text-muted mb-1.5">Klik link (opciono)</label>
                           <input
                             type="text"
                             value={bannerForm.link}
                             onChange={e => setBannerForm({ ...bannerForm, link: e.target.value })}
                             placeholder="/product/naziv-proizvoda ili https://..."
-                            className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-primary"
+                            className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-primary"
                           />
-                          <p className="text-[11px] text-muted mt-1.5">Klik na baner vodi na ovaj link (npr. stranica proizvoda, kategorija ili vanjski sajt). Ostavi prazno da baner ne bude klikabilan.</p>
+                          <p className="text-[11px] text-muted mt-1">Klik na baner vodi na ovaj link. Ostavi prazno da baner ne bude klikabilan.</p>
                         </div>
+                        {/* Redoslijed (samo hero) */}
                         {bannerForm.type === 'hero' && (
                           <div>
-                            <label className="block text-sm text-muted mb-1.5">Redoslijed (opciono)</label>
+                            <label className="block text-xs text-muted mb-1.5">Redoslijed slajda</label>
                             <input
                               type="number"
                               value={bannerForm.order || ''}
                               onChange={e => setBannerForm({ ...bannerForm, order: parseInt(e.target.value) || 0 })}
                               placeholder="0 = prvi, 1 = drugi, 2 = treći..."
-                              className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-primary"
+                              className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-primary"
                             />
-                            <p className="text-[11px] text-muted mt-1.5">Redoslijed slajdova u hero slajderu. Manji broj = ranije se prikazuje. Baneri sa istim brojem idu po vremenu kreiranja.</p>
                           </div>
                         )}
+                        {/* Aktivno */}
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="checkbox"
@@ -1792,7 +1906,7 @@ export default function AdminPage() {
                             onChange={e => setBannerForm({ ...bannerForm, active: e.target.checked })}
                             className="w-4 h-4 rounded accent-[var(--primary)] cursor-pointer"
                           />
-                          <span className="text-sm text-text">Prikaži na početnoj</span>
+                          <span className="text-sm text-text">Aktivno — prikaži na početnoj</span>
                         </label>
                       </div>
                     </div>
@@ -1807,80 +1921,68 @@ export default function AdminPage() {
                       <button
                         type="submit"
                         disabled={savingBanner}
-                        className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white transition-colors text-sm disabled:opacity-50"
+                        className="px-5 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white transition-colors text-sm disabled:opacity-50 shadow-lg shadow-primary/25"
                       >
-                        {savingBanner ? 'Spremanje...' : 'Spremi'}
+                        {savingBanner ? 'Spremanje...' : (editingBanner ? 'Sačuvaj izmjene' : 'Dodaj baner')}
                       </button>
                     </div>
                   </form>
                 )}
 
-                {/* Lista banera */}
+                {/* Lista */}
                 {banners.length === 0 ? (
                   <div className="text-center py-12 bg-surface rounded-2xl border border-white/5">
-                    <Layers className="w-12 h-12 text-muted mx-auto mb-3" />
+                    <Layers className="w-10 h-10 text-muted mx-auto mb-3" />
                     <p className="text-sm text-muted mb-4">Nema banera</p>
                     <div className="flex gap-2 justify-center">
                       <button
                         onClick={() => openNewBanner('hero')}
                         className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-xl transition-colors text-sm"
                       >
-                        Dodaj hero baner
+                        ⭐ Hero baner
                       </button>
                       <button
                         onClick={() => openNewBanner('promo')}
                         className="bg-accent hover:bg-accent/90 text-white px-4 py-2 rounded-xl transition-colors text-sm"
                       >
-                        Dodaj reklamni
+                        Reklamni baner
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-3">
-                    {banners.map(banner => (
-                      <div key={banner.id} className="bg-surface rounded-2xl border border-white/5 p-3 flex flex-col sm:flex-row gap-3">
-                        <div className="w-full sm:w-48 h-24 bg-background rounded-xl overflow-hidden shrink-0">
-                          <img src={banner.image} alt="Baner" className="w-full h-full object-fill" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${banner.active ? 'bg-accent/20 text-accent' : 'bg-white/10 text-muted'}`}>
-                              {banner.active ? 'Aktivno' : 'Neaktivno'}
-                            </span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                              (banner.type || 'promo') === 'hero'
-                                ? 'bg-primary/20 text-primary'
-                                : 'bg-white/10 text-muted'
-                            }`}>
-                              {(banner.type || 'promo') === 'hero' ? '⭐ Hero' : 'Reklamni'}
-                            </span>
-                            {(banner.type || 'promo') === 'hero' && (
-                              <span className="text-[10px] text-muted">red: {banner.order ?? 0}</span>
-                            )}
+                  (() => {
+                    const heroBanners = banners.filter(b => (b.type || 'promo') === 'hero')
+                    const promoBanners = banners.filter(b => (b.type || 'promo') === 'promo')
+                    const showHero = bannerFilter === 'all' || bannerFilter === 'hero'
+                    const showPromo = bannerFilter === 'all' || bannerFilter === 'promo'
+                    const emptyVisible = (showHero && heroBanners.length === 0) || (showPromo && promoBanners.length === 0)
+                    return (
+                      <div className="space-y-4">
+                        {emptyVisible && bannerFilter !== 'all' && (
+                          <div className="text-center py-8 bg-surface rounded-2xl border border-white/5">
+                            <Layers className="w-8 h-8 text-muted mx-auto mb-2" />
+                            <p className="text-xs text-muted">Nema banera ove vrste</p>
                           </div>
-                          <p className="text-xs text-muted truncate mt-2">
-                            {banner.link ? `Klik vodi na: ${banner.link}` : 'Bez linka (nije klikabilno)'}
-                          </p>
-                          <div className="flex gap-2 mt-3">
-                            <button
-                              onClick={() => openEditBanner(banner)}
-                              className="p-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors"
-                              title="Uredi"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => banner.id && handleDeleteBanner(banner.id)}
-                              className="p-2 bg-danger/10 hover:bg-danger/20 text-danger rounded-lg transition-colors"
-                              title="Obriši"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                        )}
+                        {showHero && heroBanners.length > 0 && (
+                          <div>
+                            <p className="text-[11px] font-medium text-muted uppercase tracking-wide mb-2">⭐ Hero slajderi ({heroBanners.length})</p>
+                            <div className="space-y-3">
+                              {heroBanners.map(banner => renderBannerCard(banner))}
+                            </div>
                           </div>
-                        </div>
+                        )}
+                        {showPromo && promoBanners.length > 0 && (
+                          <div>
+                            <p className="text-[11px] font-medium text-muted uppercase tracking-wide mb-2">Reklamni baneri ({promoBanners.length})</p>
+                            <div className="space-y-3">
+                              {promoBanners.map(banner => renderBannerCard(banner))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
+                    )
+                  })()
                 )}
               </div>
             )}
