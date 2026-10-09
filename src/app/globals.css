@@ -271,9 +271,52 @@ body {
   box-shadow: 0 12px 30px -8px rgba(59, 130, 246, 0.18);
 }
 
-/* Text white override - change to dark in light mode */
+/* Text white override - change to dark in light mode.
+   IZUZECI: text-white unutar obojenih dugmadi/kartica ostaje bijel —
+   tamni font na plavoj/zelenoj/crvenoj pozadini je nečitljiv i ružan. */
 [data-theme="light"] .text-white:not(.bg-primary *, .bg-accent *, .bg-danger *, .bg-secondary *, .bg-gradient-to-r *, .bg-gradient-to-br *, button *, a.bg-primary *) {
   color: #1A202C !important;
+}
+
+/* Obojena dugmad: font uvijek bijel u light modeu.
+   Za theme boje (primary/accent/danger/secondary) koriste se EGZAKTI class tokeni
+   (.bg-primary.text-white) da ne pogodi pill dugmad sa hover:text-white (npr. "Dodaj"
+   sa bg-primary/10 + text-primary). Za palette boje i gradijente attr pari.
+   Specifičnost (0,3,1) = tamnjenje .text-white:not(...), ali kasniji u fajlu → pobjeđuju. */
+[data-theme="light"] button.bg-primary.text-white, [data-theme="light"] a.bg-primary.text-white,
+[data-theme="light"] button.bg-accent.text-white, [data-theme="light"] a.bg-accent.text-white,
+[data-theme="light"] button.bg-danger.text-white, [data-theme="light"] a.bg-danger.text-white,
+[data-theme="light"] button.bg-secondary.text-white, [data-theme="light"] a.bg-secondary.text-white,
+[data-theme="light"] button[class*="bg-blue-"][class*="text-white"], [data-theme="light"] a[class*="bg-blue-"][class*="text-white"],
+[data-theme="light"] button[class*="bg-red-"][class*="text-white"], [data-theme="light"] a[class*="bg-red-"][class*="text-white"],
+[data-theme="light"] button[class*="bg-orange-"][class*="text-white"], [data-theme="light"] a[class*="bg-orange-"][class*="text-white"],
+[data-theme="light"] button[class*="bg-green-"][class*="text-white"], [data-theme="light"] a[class*="bg-green-"][class*="text-white"],
+[data-theme="light"] button[class*="bg-emerald-"][class*="text-white"], [data-theme="light"] a[class*="bg-emerald-"][class*="text-white"],
+[data-theme="light"] button[class*="bg-indigo-"][class*="text-white"], [data-theme="light"] a[class*="bg-indigo-"][class*="text-white"],
+[data-theme="light"] button[class*="bg-gradient-to-"][class*="text-white"], [data-theme="light"] a[class*="bg-gradient-to-"][class*="text-white"] {
+  color: #FFFFFF !important;
+}
+/* Ali: pill/tag dugmad sa prozirnom pozadinom i obojenim tekstom ostaju obojeni
+   (npr. bg-primary/10 + text-primary — to nije puno obojeno dugme) */
+[data-theme="light"] button[class*="bg-primary\/"],
+[data-theme="light"] a[class*="bg-primary\/"] {
+  color: #2563EB !important;
+}
+[data-theme="light"] button[class*="bg-accent\/"],
+[data-theme="light"] a[class*="bg-accent\/"] {
+  color: #00A884 !important;
+}
+[data-theme="light"] button[class*="bg-danger\/"],
+[data-theme="light"] a[class*="bg-danger\/"] {
+  color: #C0392B !important;
+}
+[data-theme="light"] button[class*="bg-secondary\/"],
+[data-theme="light"] a[class*="bg-secondary\/"] {
+  color: #C2410C !important;
+}
+[data-theme="light"] button[class*="bg-white\/"],
+[data-theme="light"] a[class*="bg-white\/"] {
+  color: inherit !important;
 }
 
 [data-theme="light"] .text-white\/60:not(.bg-primary *, .bg-accent *, .bg-danger *, button *),
