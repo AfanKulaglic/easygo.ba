@@ -273,8 +273,9 @@ body {
 
 /* Text white override - change to dark in light mode.
    IZUZECI: text-white unutar obojenih dugmadi/kartica ostaje bijel —
-   tamni font na plavoj/zelenoj/crvenoj pozadini je nečitljiv i ružan. */
-[data-theme="light"] .text-white:not(.bg-primary *, .bg-accent *, .bg-danger *, .bg-secondary *, .bg-gradient-to-r *, .bg-gradient-to-br *, button *, a.bg-primary *) {
+   tamni font na plavoj/zelenoj/crvenoj pozadini je nečitljiv i ružan.
+   Izuzeci pokrivaju i SAM obojeni element (.bg-danger), ne samo njegovu djecu. */
+[data-theme="light"] .text-white:not(.bg-primary, .bg-primary *, .bg-accent, .bg-accent *, .bg-danger, .bg-danger *, .bg-secondary, .bg-secondary *, .bg-gradient-to-r, .bg-gradient-to-r *, .bg-gradient-to-br, .bg-gradient-to-br *, button *, a.bg-primary *) {
   color: #1A202C !important;
 }
 
@@ -641,3 +642,36 @@ body {
 .btn-pulse {
   animation: btnPulse 1.8s ease-in-out infinite;
 }
+
+/* ===== DarkModeToggle v2 (agresivniji dizajn) ===== */
+/* Pozadinski gradient naslova klizi lijevo-desno */
+@keyframes titleShimmer {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+/* Aurora blobovi lebde gore-dolje */
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-14px) scale(1.08);
+  }
+}
+
+/* Rotacija konik prstena oko ikone */
+@keyframes ringSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+

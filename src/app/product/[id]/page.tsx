@@ -3,7 +3,8 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
-import { Heart, ChevronLeft, Check, Plus, Star, ChevronRight, ShoppingCart, Share2, Shield, Truck, RotateCcw, Play, X, Clock, Package, Eye } from 'lucide-react'
+import { Heart, ChevronLeft, Check, Plus, Star, ChevronRight, ShoppingCart, Share2, Shield, ShieldCheck, Truck, Play, X, Clock, Package, Eye, Sun, BatteryCharging, Moon, Droplets, RotateCw, MessageCircle, Video, Radar, Wifi, HardDrive, Camera, Bell, Zap, Flame, Banknote } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useCartStore } from '@/store/cartStore'
 import { useProductBySlug, useProducts } from '@/hooks/useProducts'
@@ -18,7 +19,7 @@ function applyInlineMarkdown(text: string) {  return text
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
 }
 
-function ScarcityPanel({ stock, viewersBase }: { stock?: number; viewersBase?: number }) {
+function ScarcityPanel({ stock, viewersBase, soldPercent }: { stock?: number; viewersBase?: number; soldPercent?: number }) {
   const [now, setNow] = useState<Date | null>(null)
   const [viewers, setViewers] = useState<number>(viewersBase ?? 17)
 
@@ -51,29 +52,47 @@ function ScarcityPanel({ stock, viewersBase }: { stock?: number; viewersBase?: n
 
   const showStock = typeof stock === 'number' && stock > 0
   const safeViewers = Math.max(1, viewers)
+  const [h, m, s] = countdown.split(':')
 
   return (
-    <div className="mb-4 bg-gradient-to-br from-danger/10 via-surface to-orange-500/5 rounded-2xl border border-danger/30 overflow-hidden shadow-lg shadow-danger/10 ring-1 ring-white/5">
-      <div className="flex items-center gap-2.5 px-4 py-3 bg-danger/15 border-b border-danger/20">
+    <div className="mb-3 bg-gradient-to-br from-danger/10 via-surface to-orange-500/5 rounded-2xl border border-danger/30 overflow-hidden shadow-lg shadow-danger/10 ring-1 ring-white/5">
+      {typeof soldPercent === 'number' && soldPercent > 0 && (
+        <div className="px-4 pt-3">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-sm font-bold text-danger flex items-center gap-1.5">
+              <Flame className="w-4 h-4" />
+              Rasprodaja
+            </span>
+            <span className="text-sm text-danger font-semibold">{Math.min(100, soldPercent)}% prodano</span>
+          </div>
+          <div className="h-2 bg-danger/20 rounded-full overflow-hidden mb-2.5">
+            <div className="h-full bg-danger rounded-full transition-all" style={{ width: `${Math.min(100, soldPercent)}%` }} />
+          </div>
+        </div>
+      )}
+      {showStock && (
+        <div className="flex items-center gap-2.5 px-4 py-2 border-b border-white/5">
+          <Package className="w-4 h-4 text-orange-400 shrink-0" />
+          <span className="text-sm text-muted">
+            Ostalo još samo <span className="font-extrabold text-orange-400 text-base">{stock}</span> <span className="font-semibold text-orange-400">{stock === 1 ? 'komad' : 'komada'}</span> na stanju!
+          </span>
+        </div>
+      )}
+      <div className="flex items-center gap-2.5 px-4 py-2">
         <span className="relative flex shrink-0">
           <span className="absolute inset-0 rounded-full bg-danger/40 animate-ping" />
           <Clock className="w-4 h-4 text-danger relative" />
         </span>
-        <span className="text-sm text-text">
-          <span className="font-bold text-danger uppercase tracking-wide text-xs">Akcija</span>
-          <span className="text-muted"> ističe večeras: </span>
-          <span className="font-mono font-extrabold text-danger tabular-nums text-base">{countdown}</span>
+        <span className="text-xs font-bold text-danger uppercase tracking-wide shrink-0">Akcija ističe za:</span>
+        <span className="flex items-center gap-1 font-mono font-extrabold text-danger tabular-nums text-base">
+          <span className="bg-danger/15 rounded-md px-1.5 py-0.5">{h}</span>
+          <span className="text-danger/60">:</span>
+          <span className="bg-danger/15 rounded-md px-1.5 py-0.5">{m}</span>
+          <span className="text-danger/60">:</span>
+          <span className="bg-danger/15 rounded-md px-1.5 py-0.5">{s}</span>
         </span>
       </div>
-      {showStock && (
-        <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/5">
-          <Package className="w-4 h-4 text-orange-400 shrink-0" />
-          <span className="text-sm text-muted">
-            Ostalo još samo <span className="font-extrabold text-orange-400 text-base">{stock}</span> <span className="font-semibold text-orange-400">{stock === 1 ? 'komad' : 'komada'}</span>
-          </span>
-        </div>
-      )}
-      <div className="flex items-center gap-2.5 px-4 py-3">
+      <div className="flex items-center gap-2.5 px-4 py-2 border-t border-white/5">
         <span className="relative flex shrink-0">
           <span className="absolute inset-0 rounded-full bg-accent/30 animate-ping" />
           <Eye className="w-4 h-4 text-accent relative" />
@@ -84,6 +103,43 @@ function ScarcityPanel({ stock, viewersBase }: { stock?: number; viewersBase?: n
       </div>
     </div>
   )
+}
+
+const FEATURE_ICONS: Array<[string, LucideIcon]> = [
+  ['solar', Sun],
+  ['baterij', BatteryCharging],
+  ['punjenj', BatteryCharging],
+  ['noć', Moon],
+  ['night', Moon],
+  ['vod', Droplets],
+  ['ip66', Droplets],
+  ['ptz', RotateCw],
+  ['rotac', RotateCw],
+  ['pan', RotateCw],
+  ['komunik', MessageCircle],
+  ['zvuk', MessageCircle],
+  ['audio', MessageCircle],
+  ['video', Video],
+  ['rezolucij', Video],
+  ['fhd', Video],
+  ['detekcij', Radar],
+  ['senzor', Radar],
+  ['pokret', Radar],
+  ['wifi', Wifi],
+  ['4g', Wifi],
+  ['sim', Wifi],
+  ['mrež', Wifi],
+  ['memorij', HardDrive],
+  ['kartic', HardDrive],
+  ['kamera', Camera],
+  ['alarm', Bell],
+  ['sirena', Bell],
+]
+
+function featureIcon(feature: string): LucideIcon {
+  const f = feature.toLowerCase()
+  const match = FEATURE_ICONS.find(([keyword]) => f.includes(keyword))
+  return match ? match[1] : Check
 }
 
 function FaqSection({ faq }: { faq: { id: string; question: string; answer: string }[] }) {
@@ -347,6 +403,32 @@ export default function ProductPage() {
   const nextImage = () => setSelectedImage(prev => (prev + 1) % allImages.length)
   const prevImage = () => setSelectedImage(prev => (prev - 1 + allImages.length) % allImages.length)
 
+  // Swipe support for the main image (mobile)
+  const touchStartX = useRef<number | null>(null)
+  const touchStartY = useRef<number | null>(null)
+  const suppressImageClick = useRef(false)
+
+  const handleImageTouchStart = (e: React.TouchEvent) => {
+    if (allImages.length <= 1) return
+    touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+  }
+
+  const handleImageTouchEnd = (e: React.TouchEvent) => {
+    if (allImages.length <= 1) return
+    if (touchStartX.current === null || touchStartY.current === null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    const dy = e.changedTouches[0].clientY - touchStartY.current
+    touchStartX.current = null
+    touchStartY.current = null
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0) nextImage()
+      else prevImage()
+      suppressImageClick.current = true
+      setTimeout(() => { suppressImageClick.current = false }, 350)
+    }
+  }
+
   // Auto-scroll thumbnail strip to keep the selected thumbnail visible
   useEffect(() => {
     if (!thumbnailRef.current) return
@@ -439,7 +521,12 @@ export default function ProductPage() {
           )}
 
           {/* Image */}
-          <div className="max-w-5xl max-h-[85vh] flex items-center justify-center" onClick={e => e.stopPropagation()}>
+          <div 
+            className="max-w-5xl max-h-[85vh] flex items-center justify-center touch-pan-y select-none" 
+            onTouchStart={handleImageTouchStart}
+            onTouchEnd={handleImageTouchEnd}
+            onClick={e => e.stopPropagation()}
+          >
             <img 
               src={currentImage} 
               alt={displayProduct.name} 
@@ -474,15 +561,30 @@ export default function ProductPage() {
 
       <div className="lg:max-w-7xl lg:mx-auto lg:px-8 lg:py-8">
         {/* Desktop Layout - Images on left, Info on right */}
-        <div className="lg:grid lg:grid-cols-2 lg:gap-10 lg:items-stretch">
+        <div className="lg:grid lg:grid-cols-[3fr_2fr] lg:gap-8 lg:items-stretch">
           
           {/* Left Column - Images */}
-          <div className="lg:px-0 lg:flex lg:flex-col lg:h-full">
+          <div className="lg:px-0 lg:flex lg:flex-col lg:h-full lg:justify-center">
+            {/* Galerija: na desktopu strijelice PORED slike, na mobilu ispod */}
+            <div className="lg:flex lg:gap-3">
+              <button
+                onClick={prevImage}
+                aria-label="Prethodna slika"
+                className="hidden h-9 w-9 shrink-0 items-center justify-center self-center rounded-full border border-white/10 bg-surface text-text transition-all hover:border-primary/40 hover:text-primary active:scale-95 lg:flex lg:h-10 lg:w-10"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+
             {/* Main Image */}
             <div className="relative bg-gradient-to-br from-primary/20 via-surface to-accent/10 lg:rounded-3xl overflow-hidden lg:flex-1 lg:min-h-0">
               <div 
-                className="aspect-square lg:aspect-auto lg:h-full flex items-center justify-center cursor-pointer"
-                onClick={() => isImageData(currentImage) && setShowImageModal(true)}
+                className="aspect-square lg:aspect-auto lg:h-full flex items-center justify-center cursor-pointer touch-pan-y select-none"
+                onTouchStart={handleImageTouchStart}
+                onTouchEnd={handleImageTouchEnd}
+                onClick={() => {
+                  if (suppressImageClick.current) return
+                  if (isImageData(currentImage)) setShowImageModal(true)
+                }}
               >
                 {isImageData(currentImage) ? (
                   <img src={currentImage} alt={displayProduct.name} className="w-full h-full object-contain drop-shadow-2xl" />
@@ -519,25 +621,42 @@ export default function ProductPage() {
                 <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-danger text-danger' : 'text-muted'}`} />
               </button>
 
-              {/* Navigation Arrows */}
-              {allImages.length > 1 && (
-                <>
-                  <button onClick={prevImage} className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-background rounded-full hover:bg-background/90 transition-colors">
-                    <ChevronLeft className="w-5 h-5 text-text" />
-                  </button>
-                  <button onClick={nextImage} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-background rounded-full hover:bg-background/90 transition-colors">
-                    <ChevronRight className="w-5 h-5 text-text" />
-                  </button>
-                </>
-              )}
-
-              {/* Image Counter */}
-              {allImages.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background px-3 py-1.5 rounded-full">
-                  <span className="text-xs text-text font-medium">{selectedImage + 1} / {allImages.length}</span>
-                </div>
-              )}
+              {/* Kontrole: na mobilu ispod slike, na desktopu ih zamjenjuju strelice pored */}
             </div>
+
+              <button
+                onClick={nextImage}
+                aria-label="Sljedeća slika"
+                className="hidden h-9 w-9 shrink-0 items-center justify-center self-center rounded-full border border-white/10 bg-surface text-text transition-all hover:border-primary/40 hover:text-primary active:scale-95 lg:flex lg:h-10 lg:w-10"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Gallery controls — samo mobil/tablet (lg skriveno jer su strelice pored slike) */}
+            {allImages.length > 1 && (
+              <div className="mt-3 flex items-center justify-between px-4 lg:hidden">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={prevImage}
+                    aria-label="Prethodna slika"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-surface text-text transition-all hover:border-primary/40 hover:text-primary active:scale-95"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={nextImage}
+                    aria-label="Sljedeća slika"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-surface text-text transition-all hover:border-primary/40 hover:text-primary active:scale-95"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+                <span className="text-xs font-medium tabular-nums text-muted">
+                  {selectedImage + 1} / {allImages.length}
+                </span>
+              </div>
+            )}
 
             {/* Thumbnail Gallery - Shows 4 at a time, scroll/drag for more */}
             {allImages.length > 1 && (
@@ -576,27 +695,30 @@ export default function ProductPage() {
           {/* Right Column - Product Info */}
           <div className="px-5 lg:px-0 lg:flex lg:flex-col lg:h-full">
             {/* Category & Badge */}
-            <div className="flex items-center gap-2 mt-6 lg:mt-0 mb-3">
+            <div className="flex items-center gap-2 mt-6 lg:mt-0 mb-2">
               <Link href={`/category/${displayProduct.categorySlug}`} className="text-sm text-primary hover:underline">
                 {displayProduct.category}
               </Link>
               {displayProduct.badge && (
-                <span className={`text-xs font-medium px-2 py-1 rounded-md ${
-                  displayProduct.badge === 'sale' ? 'bg-danger/20 text-danger' :
-                  displayProduct.badge === 'new' ? 'bg-accent/20 text-accent' : 'bg-primary/20 text-primary'
-                }`}>
-                  {displayProduct.badge === 'sale' ? 'Akcija' : displayProduct.badge === 'new' ? 'Novo' : displayProduct.badge}
-                </span>
+                <>
+                  <ChevronRight className="w-3.5 h-3.5 text-muted" />
+                  <span className={`text-xs font-medium px-2 py-1 rounded-md ${
+                    displayProduct.badge === 'sale' ? 'bg-danger/20 text-danger' :
+                    displayProduct.badge === 'new' ? 'bg-accent/20 text-accent' : 'bg-primary/20 text-primary'
+                  }`}>
+                    {displayProduct.badge === 'sale' ? 'Akcija' : displayProduct.badge === 'new' ? 'Novo' : displayProduct.badge}
+                  </span>
+                </>
               )}
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl lg:text-3xl font-bold text-text mb-4 leading-tight">
+            <h1 className="text-2xl lg:text-3xl font-bold text-text mb-2.5 leading-tight">
               {displayProduct.name}
             </h1>
 
             {/* Rating */}
-            <div className="flex items-center gap-3 mb-5">
+            <div className="flex items-center gap-3 mb-3">
               <div className="flex items-center gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star key={i} className={`w-5 h-5 ${i < Math.floor(displayProduct.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-muted/30'}`} />
@@ -605,41 +727,51 @@ export default function ProductPage() {
               <span className="text-sm text-muted">({displayProduct.reviews} recenzija)</span>
             </div>
 
-            {/* Price */}
-            <div className="flex items-baseline gap-3 mb-5">
-              <span className="text-3xl lg:text-4xl font-bold text-primary">{calculatedPrice.toFixed(2)} KM</span>
-              {displayProduct.originalPrice && (
-                <span className="text-lg text-muted line-through">{displayProduct.originalPrice.toFixed(2)} KM</span>
-              )}
-            </div>
-
-            {/* Trust Points */}
+            {/* Price + Ušteda */}
             {(() => {
-              const points = (displayProduct.trustPoints && displayProduct.trustPoints.length > 0)
-                ? displayProduct.trustPoints
-                : [
-                    { id: 'd1', icon: '✅', text: '1000+ zadovoljnih kupaca u BiH' },
-                    { id: 'd2', icon: '📦', text: 'Dostava za 24h – plaćanje pri preuzimanju' },
-                    { id: 'd3', icon: '🛡️', text: 'Sigurna kupovina – bez rizika' },
-                  ]
+              const saved = displayProduct.originalPrice ? displayProduct.originalPrice - calculatedPrice : 0
+              const pct = displayProduct.originalPrice ? Math.round((saved / displayProduct.originalPrice) * 100) : 0
+              const savedLabel = saved % 1 === 0 ? saved : saved.toFixed(2)
               return (
-                <div className="bg-surface rounded-2xl p-5 mb-5 border border-white/5">
-                  <ul className="space-y-2">
-                    {points.map(p => (
-                      <li key={p.id} className="flex items-center gap-3 text-sm text-text">
-                        <span className="text-base leading-none shrink-0">{p.icon}</span>
-                        <span className="text-text/90">{p.text}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 mb-3">
+                  <span className="text-3xl font-bold text-primary">{calculatedPrice.toFixed(2)} KM</span>
+                  {displayProduct.originalPrice && (
+                    <span className="text-base lg:text-lg text-muted line-through">{displayProduct.originalPrice.toFixed(2)} KM</span>
+                  )}
+                  {saved > 0 && (
+                    <span className="inline-flex items-center gap-1.5 bg-danger text-white rounded-lg px-3 py-1.5">
+                      <span className="text-xs font-bold uppercase tracking-wide">Ušteda</span>
+                      <span className="text-sm font-extrabold">{savedLabel} KM</span>
+                      <span className="text-xs font-bold bg-white/20 rounded px-1.5 py-0.5">-{pct}%</span>
+                    </span>
+                  )}
                 </div>
               )
             })()}
 
+            {/* Trust: dostava / plaćanje / garancija */}
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div className="flex flex-col items-center gap-1 bg-surface rounded-xl p-2.5 text-center border border-white/5">
+                <Truck className="w-5 h-5 text-primary" />
+                <span className="text-[11px] leading-tight font-semibold text-text">Brza dostava</span>
+                <span className="text-[11px] leading-tight text-muted">{displayProduct.deliveryTime ? `${displayProduct.deliveryTime} u BiH` : '24–48h u BiH'}</span>
+              </div>
+              <div className="flex flex-col items-center gap-1 bg-surface rounded-xl p-2.5 text-center border border-white/5">
+                <Banknote className="w-5 h-5 text-primary" />
+                <span className="text-[11px] leading-tight font-semibold text-text">Plaćanje pouzećem</span>
+                <span className="text-[11px] leading-tight text-muted">Bez rizika</span>
+              </div>
+              <div className="flex flex-col items-center gap-1 bg-surface rounded-xl p-2.5 text-center border border-white/5">
+                <Shield className="w-5 h-5 text-primary" />
+                <span className="text-[11px] leading-tight font-semibold text-text">Garancija</span>
+                <span className="text-[11px] leading-tight text-muted">{displayProduct.warrantyText || '6 mjeseci'}</span>
+              </div>
+            </div>
+
             {/* Variants Selector */}
             {displayProduct.variants && displayProduct.variants.length > 0 && (
-              <div className="mb-5 bg-gradient-to-br from-surface/80 to-surface/40 rounded-2xl p-3 lg:p-4 border border-white/10 backdrop-blur-sm">
-                <div className="flex items-center gap-2 mb-3">
+              <div className="mb-3 bg-gradient-to-br from-surface/80 to-surface/40 rounded-2xl p-3 border border-white/10 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-2">
                   <div className="w-1 h-4 bg-primary rounded-full"></div>
                   <label className="text-xs lg:text-sm font-semibold text-text">
                     Odaberi opciju
@@ -693,33 +825,58 @@ export default function ProductPage() {
               </div>
             )}
 
-            {/* Flash Sale Progress */}
-            {displayProduct.soldPercent && (
-              <div className="bg-danger/10 rounded-2xl p-4 mb-5">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-danger">🔥 Rasprodaja</span>
-                  <span className="text-sm text-danger font-medium">{displayProduct.soldPercent}% prodano</span>
-                </div>
-                <div className="h-2 bg-danger/20 rounded-full overflow-hidden">
-                  <div className="h-full bg-danger rounded-full transition-all" style={{ width: `${displayProduct.soldPercent}%` }} />
+            {/* Scarcity Panel: countdown + stock + live viewers */}
+            {(() => {
+              let effectiveStock: number | undefined = displayProduct.stock
+              if (displayProduct.variants && displayProduct.variants.length > 0) {
+                const selectedVariant = displayProduct.variants.find(v => v.value === selectedVariants['variant'])
+                effectiveStock = selectedVariant?.stock
+              }
+              return <ScarcityPanel stock={effectiveStock} viewersBase={displayProduct.viewersCount} soldPercent={displayProduct.soldPercent} />
+            })()}
+
+            {/* Features */}
+            {displayProduct.features && displayProduct.features.length > 0 && (
+              <div className="bg-surface rounded-2xl p-4 mb-3 border border-white/5">
+                <h3 className="text-sm font-semibold text-text mb-2">Karakteristike</h3>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                  {displayProduct.features.map((feature, index) => {
+                    const Icon = featureIcon(feature)
+                    return (
+                      <div key={index} className="flex items-center gap-2 text-xs lg:text-sm text-muted">
+                        <span className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <Icon className="w-4 h-4 text-primary" />
+                        </span>
+                        <span className="leading-tight">{feature}</span>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}
 
-            {/* Features - Desktop Only */}
-            {displayProduct.features && displayProduct.features.length > 0 && (
-              <div className="hidden lg:block bg-surface rounded-2xl p-5 mb-5 border border-white/5">
-                <h3 className="text-sm font-semibold text-text mb-3">Karakteristike</h3>
-                <div className="lg:grid lg:grid-cols-2 lg:gap-3">
-                  {displayProduct.features.map((feature, index) => (
-                    <div key={index} className="flex items-center gap-3 text-sm text-muted">
-                      <Check className="w-4 h-4 text-accent flex-shrink-0" />
-                      <span>{feature}</span>
-                    </div>
-                  ))}
+            {/* Trust Points */}
+            {(() => {
+              const points = (displayProduct.trustPoints && displayProduct.trustPoints.length > 0)
+                ? displayProduct.trustPoints
+                : [
+                    { id: 'd1', icon: '✅', text: 'Više od 1000+ zadovoljnih kupaca u BiH' },
+                    { id: 'd2', icon: '📦', text: 'Dostava za 24h – plaćanje pri preuzimanju' },
+                    { id: 'd3', icon: '🛡️', text: 'Sigurna kupovina – bez rizika' },
+                  ]
+              return (
+                <div className="bg-surface rounded-2xl p-4 mb-3 border border-white/5">
+                  <ul className="space-y-1.5">
+                    {points.map(p => (
+                      <li key={p.id} className="flex items-center gap-3 text-sm text-text">
+                        <span className="text-base leading-none shrink-0">{p.icon}</span>
+                        <span className="text-text/90">{p.text}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
-            )}
+              )
+            })()}
 
             {/* Colors */}
             {displayProduct.colors && displayProduct.colors.length > 0 && (
@@ -742,18 +899,8 @@ export default function ProductPage() {
               </div>
             )}
 
-            {/* Scarcity Panel: countdown + stock + live viewers */}
-            {(() => {
-              let effectiveStock: number | undefined = displayProduct.stock
-              if (displayProduct.variants && displayProduct.variants.length > 0) {
-                const selectedVariant = displayProduct.variants.find(v => v.value === selectedVariants['variant'])
-                effectiveStock = selectedVariant?.stock
-              }
-              return <ScarcityPanel stock={effectiveStock} viewersBase={displayProduct.viewersCount} />
-            })()}
-
             {/* Quantity & Add to Cart */}
-            <div className="flex items-center gap-2 mb-5">
+            <div className="flex items-center gap-2 mb-3">
               <div className="flex items-center bg-surface rounded-lg border border-white/10">
                 <button 
                   onClick={() => setQuantity(Math.max(1, quantity - 1))} 
@@ -784,41 +931,20 @@ export default function ProductPage() {
                 const variantParam = selectedVariants['variant'] ? `&variant=${selectedVariants['variant']}` : ''
                 router.push(`/checkout/${displayProduct.id}?qty=${quantity}${variantParam}`)
               }}
-              className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-3 lg:py-3.5 px-4 lg:px-6 rounded-lg lg:rounded-xl font-medium lg:font-semibold text-sm lg:text-base transition-all shadow-lg shadow-orange-500/25 mb-5 btn-pulse"
+              className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-3 lg:py-3.5 px-4 lg:px-6 rounded-lg lg:rounded-xl font-bold text-base lg:text-lg transition-all shadow-lg shadow-orange-500/25 mb-3 btn-pulse"
             >
-              Naruci
+              <Zap className="w-5 h-5 fill-white" />
+              Naruči odmah
             </button>
 
-            {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-3 mb-5 lg:mb-0 lg:mt-auto lg:pt-3">
-              <div className="bg-surface rounded-xl p-3 text-center border border-white/5">
-                <Truck className="w-5 h-5 text-accent mx-auto mb-1" />
-                <span className="text-xs text-muted">{displayProduct.deliveryTime ? `Dostava ${displayProduct.deliveryTime}` : 'Brza dostava'}</span>
-              </div>
-              <div className="bg-surface rounded-xl p-3 text-center border border-white/5">
-                <Shield className="w-5 h-5 text-accent mx-auto mb-1" />
-                <span className="text-xs text-muted">{displayProduct.warrantyText ? `Garancija ${displayProduct.warrantyText}` : 'Garancija'}</span>
-              </div>
-              <div className="bg-surface rounded-xl p-3 text-center border border-white/5">
-                <RotateCcw className="w-5 h-5 text-accent mx-auto mb-1" />
-                <span className="text-xs text-muted">{displayProduct.returnDays ? `Povrat ${displayProduct.returnDays} dana` : 'Povrat 14 dana'}</span>
-              </div>
+            {/* Verified Seller */}
+            <div className="flex items-center justify-center gap-2 mb-5 lg:mb-0 text-sm">
+              <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-4 h-4 text-primary" />
+              </span>
+              <span className="text-muted">Provjeren prodavač</span>
+              <span className="font-semibold text-text">ELESONIC d.o.o.</span>
             </div>
-
-            {/* Features - Mobile Only */}
-            {displayProduct.features && displayProduct.features.length > 0 && (
-              <div className="lg:hidden bg-surface rounded-2xl p-5 mb-5 border border-white/5">
-                <h3 className="text-sm font-semibold text-text mb-3">Karakteristike</h3>
-                <div className="space-y-2">
-                  {displayProduct.features.map((feature, index) => (
-                    <div key={index} className="flex items-center gap-3 text-sm text-muted">
-                      <Check className="w-4 h-4 text-accent flex-shrink-0" />
-                      <span>{feature}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Description - Mobile Only */}
             <div className="lg:hidden mb-5">
@@ -1098,9 +1224,10 @@ export default function ProductPage() {
               const variantParam = selectedVariants['variant'] ? `&variant=${selectedVariants['variant']}` : ''
               router.push(`/checkout/${displayProduct.id}?qty=${quantity}${variantParam}`)
             }}
-            className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-orange-500/25 btn-pulse"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-orange-500/25 btn-pulse"
           >
-            Naruci
+            <Zap className="w-4 h-4 fill-white shrink-0" />
+            Naruči odmah
           </button>
         </div>
       </div>

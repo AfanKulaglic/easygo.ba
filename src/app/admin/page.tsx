@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { 
   Package, MessageSquare, FolderOpen, Plus, Pencil, Trash2, 
   X, Eye, EyeOff, ChevronLeft, ChevronDown, Menu, LogOut, Reply, Send, Moon, Sun, Lock, User, Star, ShoppingBag, Bell, Search,
-  BarChart3, TrendingUp, TrendingDown, DollarSign, Users, ShoppingCart, Layers, Mail, AlertTriangle
+  BarChart3, TrendingUp, TrendingDown, DollarSign, Users, ShoppingCart, Layers, Mail, AlertTriangle, Tag, Gift
 } from 'lucide-react'
 import Link from 'next/link'
 import { 
@@ -16,11 +16,13 @@ import {
   markMessageAsRead, deleteMessage, replyToMessage,
   updateOrder, markOrderAsSeen, deleteOrder,
   Banner, BannerType, subscribeToBanners, addBanner, updateBanner, deleteBanner,
+  PromoCode, PromoCodeType, subscribeToPromoCodes, addPromoCode, updatePromoCode, deletePromoCode,
+  UpsellItem, subscribeToUpsellItems, addUpsellItem, updateUpsellItem, deleteUpsellItem,
   generateSlug
 } from '@/lib/realtimeProducts'
 import { categories as localCategories } from '@/lib/productData'
 
-type Tab = 'orders' | 'analytics' | 'products' | 'categories' | 'messages' | 'banners'
+type Tab = 'orders' | 'analytics' | 'products' | 'categories' | 'messages' | 'banners' | 'promoCodes' | 'upsell'
 
 // Helper to convert timestamp (number or Firestore Timestamp) to Date
 const toDate = (timestamp: number | { toDate?: () => Date } | undefined): Date | null => {
@@ -112,6 +114,16 @@ export default function AdminPage() {
   const [bannerForm, setBannerForm] = useState({ image: '', link: '', active: true, type: 'promo' as BannerType, order: 0 })
   const [bannerFilter, setBannerFilter] = useState<'all' | 'hero' | 'promo'>('all')
 
+  // Promo kodovi
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>([])
+  const [editingPromoCode, setEditingPromoCode] = useState<PromoCode | null>(null)
+  const [showPromoCodeModal, setShowPromoCodeModal] = useState(false)
+
+  // Up-sell stavke
+  const [upsellItems, setUpsellItems] = useState<UpsellItem[]>([])
+  const [editingUpsellItem, setEditingUpsellItem] = useState<UpsellItem | null>(null)
+  const [showUpsellModal, setShowUpsellModal] = useState(false)
+
   // Handle login
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
@@ -182,6 +194,8 @@ export default function AdminPage() {
     })
     const unsubViews = subscribeToProductViews(setProductViews)
     const unsubBanners = subscribeToBanners(setBanners)
+    const unsubPromoCodes = subscribeToPromoCodes(setPromoCodes)
+    const unsubUpsellItems = subscribeToUpsellItems(setUpsellItems)
     setLoading(false)
     
     return () => {
@@ -192,6 +206,8 @@ export default function AdminPage() {
       unsubOrders()
       unsubViews()
       unsubBanners()
+      unsubPromoCodes()
+      unsubUpsellItems()
     }
   }, [isAuthenticated])
 
@@ -545,11 +561,11 @@ export default function AdminPage() {
           <p className="text-[10px] text-muted/70 truncate mt-0.5">
             {toDate(banner.updatedAt)?.toLocaleDateString('bs-BA') || toDate(banner.createdAt)?.toLocaleDateString('bs-BA') || ''}
           </p>
-          {/* Akcije */}
-          <div className="flex gap-2 mt-3">
+          {/* Akcije — veći touch targeti na mobitelu */}
+          <div className="flex gap-2.5 mt-3">
             <button
               onClick={() => handleToggleBannerActive(banner)}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-2.5 sm:p-2 rounded-lg transition-colors ${
                 (banner.active ?? true)
                   ? 'bg-white/5 hover:bg-white/10 text-muted'
                   : 'bg-accent/10 hover:bg-accent/20 text-accent'
@@ -560,14 +576,14 @@ export default function AdminPage() {
             </button>
             <button
               onClick={() => openEditBanner(banner)}
-              className="p-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors"
+              className="p-2.5 sm:p-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors"
               title="Uredi"
             >
               <Pencil className="w-4 h-4" />
             </button>
             <button
               onClick={() => banner.id && handleDeleteBanner(banner.id)}
-              className="p-2 bg-danger/10 hover:bg-danger/20 text-danger rounded-lg transition-colors"
+              className="p-2.5 sm:p-2 bg-danger/10 hover:bg-danger/20 text-danger rounded-lg transition-colors"
               title="Obriši"
             >
               <Trash2 className="w-4 h-4" />
@@ -583,6 +599,8 @@ export default function AdminPage() {
     { id: 'products' as Tab, label: 'Proizvodi', icon: Package, count: products.length },
     { id: 'categories' as Tab, label: 'Kategorije', icon: FolderOpen, count: categories.length },
     { id: 'banners' as Tab, label: 'Baneri', icon: Layers, count: banners.length },
+    { id: 'promoCodes' as Tab, label: 'Promo kodovi', icon: Tag, count: promoCodes.length },
+    { id: 'upsell' as Tab, label: 'Up-sell', icon: Gift, count: upsellItems.length },
     { id: 'messages' as Tab, label: 'Poruke', icon: MessageSquare, count: unreadCount },
     { id: 'analytics' as Tab, label: 'Statistika', icon: BarChart3, count: 0 },
   ]
@@ -1147,6 +1165,169 @@ export default function AdminPage() {
             )}
 
 
+            {/* Promo kodovi Tab */}
+            {activeTab === 'promoCodes' && (
+              <div>
+                <div className="flex items-center justify-between mb-4 lg:mb-6">
+                  <div>
+                    <h2 className="text-lg lg:text-xl font-semibold text-text">Promo kodovi</h2>
+                    <p className="text-xs text-muted mt-0.5 hidden lg:block">Kodovi za popust koji se primjenjuju na checkoutu</p>
+                  </div>
+                  <button
+                    onClick={() => { setEditingPromoCode(null); setShowPromoCodeModal(true) }}
+                    className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white px-3 lg:px-5 py-2 lg:py-2.5 rounded-xl transition-colors shadow-lg shadow-primary/25 text-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden sm:inline">Dodaj kod</span>
+                  </button>
+                </div>
+
+                {promoCodes.length === 0 ? (
+                  <div className="text-center py-12 bg-surface rounded-2xl border border-white/5">
+                    <Tag className="w-10 h-10 text-muted mx-auto mb-3" />
+                    <p className="text-sm text-muted">Nema promo kodova</p>
+                    <p className="text-xs text-muted mt-1">Dodajte prvi kod (npr. ELES10 za 10% popusta)</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {promoCodes.map(promo => (
+                      <div key={promo.id} className="bg-surface rounded-xl border border-white/5 p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
+                              <Tag className="w-5 h-5 text-primary" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-semibold text-text text-sm tracking-wide">{promo.code}</p>
+                                {promo.active ? (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-medium">Aktivan</span>
+                                ) : (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-muted font-medium">Neaktivan</span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted mt-0.5">
+                                {promo.type === 'percentage' ? `${promo.value}% popusta` : `${promo.value.toFixed(2)} KM popusta`} od ukupnog iznosa
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              onClick={() => promo.id && updatePromoCode(promo.id, { active: !promo.active })}
+                              className={`p-2 rounded-lg transition-colors ${promo.active ? 'bg-accent/10 hover:bg-accent/20 text-accent' : 'bg-white/5 hover:bg-white/10 text-muted'}`}
+                              title={promo.active ? 'Deaktiviraj' : 'Aktiviraj'}
+                            >
+                              {promo.active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                            </button>
+                            <button
+                              onClick={() => { setEditingPromoCode(promo); setShowPromoCodeModal(true) }}
+                              className="p-2 hover:bg-white/5 rounded-lg"
+                              title="Uredi"
+                            >
+                              <Pencil className="w-4 h-4 text-muted" />
+                            </button>
+                            <button
+                              onClick={() => { if (promo.id && confirm('Obrisati promo kod?')) deletePromoCode(promo.id) }}
+                              className="p-2 hover:bg-danger/10 rounded-lg"
+                              title="Obriši"
+                            >
+                              <Trash2 className="w-4 h-4 text-danger" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Up-sell Tab */}
+            {activeTab === 'upsell' && (
+              <div>
+                <div className="flex items-center justify-between mb-4 lg:mb-6">
+                  <div>
+                    <h2 className="text-lg lg:text-xl font-semibold text-text">Up-sell stavke</h2>
+                    <p className="text-xs text-muted mt-0.5 hidden lg:block">Dodatni artikli koji se nude kupcima na checkoutu</p>
+                  </div>
+                  <button
+                    onClick={() => { setEditingUpsellItem(null); setShowUpsellModal(true) }}
+                    className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white px-3 lg:px-5 py-2 lg:py-2.5 rounded-xl transition-colors shadow-lg shadow-primary/25 text-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden sm:inline">Dodaj stavku</span>
+                  </button>
+                </div>
+
+                {upsellItems.length === 0 ? (
+                  <div className="text-center py-12 bg-surface rounded-2xl border border-white/5">
+                    <Gift className="w-10 h-10 text-muted mx-auto mb-3" />
+                    <p className="text-sm text-muted">Nema up-sell stavki</p>
+                    <p className="text-xs text-muted mt-1">Dodajte npr. memorijsku karticu ili zaštitu u transportu</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {[...upsellItems].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)).map(item => (
+                      <div key={item.id} className="bg-surface rounded-xl border border-white/5 p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+                              {item.image && (item.image.startsWith('http') || item.image.startsWith('/') || item.image.startsWith('data:')) ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+                              ) : (
+                                <Gift className="w-5 h-5 text-accent" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-semibold text-text text-sm">{item.name}</p>
+                                {item.badge && (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-danger/15 text-danger font-medium">{item.badge}</span>
+                                )}
+                                {!item.active && (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-muted font-medium">Neaktivno</span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted mt-0.5">
+                                {item.price.toFixed(2)} KM
+                                {item.originalPrice && item.originalPrice > item.price ? ` (stara: ${item.originalPrice.toFixed(2)} KM)` : ''}
+                                {item.sortOrder !== undefined && ` • redoslijed ${item.sortOrder}`}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              onClick={() => item.id && updateUpsellItem(item.id, { active: !item.active })}
+                              className={`p-2 rounded-lg transition-colors ${item.active ? 'bg-accent/10 hover:bg-accent/20 text-accent' : 'bg-white/5 hover:bg-white/10 text-muted'}`}
+                              title={item.active ? 'Sakrij' : 'Prikaži'}
+                            >
+                              {item.active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                            </button>
+                            <button
+                              onClick={() => { setEditingUpsellItem(item); setShowUpsellModal(true) }}
+                              className="p-2 hover:bg-white/5 rounded-lg"
+                              title="Uredi"
+                            >
+                              <Pencil className="w-4 h-4 text-muted" />
+                            </button>
+                            <button
+                              onClick={() => { if (item.id && confirm('Obrisati up-sell stavku?')) deleteUpsellItem(item.id) }}
+                              className="p-2 hover:bg-danger/10 rounded-lg"
+                              title="Obriši"
+                            >
+                              <Trash2 className="w-4 h-4 text-danger" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+
             {/* Messages Tab */}
             {activeTab === 'messages' && (
               <div>
@@ -1405,6 +1586,22 @@ export default function AdminPage() {
                                 </div>
                               ))}
                             </div>
+
+                            {/* Add-ons & Promo */}
+                            {(order.addons && order.addons.length > 0) || order.promoCode ? (
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                {order.addons?.map((addon, idx) => (
+                                  <span key={idx} className="flex items-center gap-1 bg-accent/10 text-accent px-2.5 py-1 rounded-full text-[10px] font-medium">
+                                    <Gift className="w-3 h-3" /> {addon.name} (+{addon.price.toFixed(2)} KM)
+                                  </span>
+                                ))}
+                                {order.promoCode && (
+                                  <span className="flex items-center gap-1 bg-secondary/10 text-secondary px-2.5 py-1 rounded-full text-[10px] font-medium">
+                                    <Tag className="w-3 h-3" /> {order.promoCode} (-{((order.discountAmount || 0)).toFixed(2)} KM)
+                                  </span>
+                                )}
+                              </div>
+                            ) : null}
 
                             {/* Contact Info - Pills */}
                             <div className="flex flex-wrap gap-2 mb-4">
@@ -1755,26 +1952,28 @@ export default function AdminPage() {
                     <h2 className="text-lg lg:text-xl font-semibold text-text">Baneri</h2>
                     <p className="text-xs text-muted mt-0.5 hidden lg:block">Hero slajder i reklamni baneri na početnoj</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => openNewBanner('hero')}
-                      className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white px-3 lg:px-4 py-2 lg:py-2.5 rounded-xl transition-colors shadow-lg shadow-primary/25 text-sm"
+                      title="Novi hero baner"
+                      className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white px-2.5 sm:px-4 py-2 lg:py-2.5 rounded-xl transition-colors shadow-lg shadow-primary/25 text-xs sm:text-sm font-medium"
                     >
-                      <Plus className="w-4 h-4" />
-                      <span className="hidden sm:inline">Hero</span>
+                      <Plus className="w-4 h-4 shrink-0" />
+                      <span>Hero</span>
                     </button>
                     <button
                       onClick={() => openNewBanner('promo')}
-                      className="flex items-center gap-1.5 bg-accent hover:bg-accent/90 text-white px-3 lg:px-4 py-2 lg:py-2.5 rounded-xl transition-colors shadow-lg shadow-accent/25 text-sm"
+                      title="Novi reklamni baner"
+                      className="flex items-center gap-1.5 bg-accent hover:bg-accent/90 text-white px-2.5 sm:px-4 py-2 lg:py-2.5 rounded-xl transition-colors shadow-lg shadow-accent/25 text-xs sm:text-sm font-medium"
                     >
-                      <Plus className="w-4 h-4" />
-                      <span className="hidden sm:inline">Reklamni</span>
+                      <Plus className="w-4 h-4 shrink-0" />
+                      <span>Reklamni</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Filteri — chips */}
-                <div className="flex gap-2 mb-4">
+                {/* Filteri — chips (wrap na uskim ekranima) */}
+                <div className="flex flex-wrap gap-2 mb-4">
                   {([
                     { id: 'all' as const, label: 'Svi', count: banners.length },
                     { id: 'hero' as const, label: '⭐ Hero', count: banners.filter(b => (b.type || 'promo') === 'hero').length },
@@ -1910,18 +2109,18 @@ export default function AdminPage() {
                         </label>
                       </div>
                     </div>
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
                       <button
                         type="button"
                         onClick={() => { setShowBannerForm(false); setEditingBanner(null) }}
-                        className="px-4 py-2 rounded-xl border border-white/10 text-text hover:bg-white/5 transition-colors text-sm"
+                        className="w-full sm:w-auto justify-center px-4 py-2.5 sm:py-2 rounded-xl border border-white/10 text-text hover:bg-white/5 transition-colors text-sm"
                       >
                         Odustani
                       </button>
                       <button
                         type="submit"
                         disabled={savingBanner}
-                        className="px-5 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white transition-colors text-sm disabled:opacity-50 shadow-lg shadow-primary/25"
+                        className="w-full sm:w-auto justify-center px-5 py-2.5 sm:py-2 rounded-xl bg-primary hover:bg-primary/90 text-white transition-colors text-sm disabled:opacity-50 shadow-lg shadow-primary/25"
                       >
                         {savingBanner ? 'Spremanje...' : (editingBanner ? 'Sačuvaj izmjene' : 'Dodaj baner')}
                       </button>
@@ -1934,7 +2133,7 @@ export default function AdminPage() {
                   <div className="text-center py-12 bg-surface rounded-2xl border border-white/5">
                     <Layers className="w-10 h-10 text-muted mx-auto mb-3" />
                     <p className="text-sm text-muted mb-4">Nema banera</p>
-                    <div className="flex gap-2 justify-center">
+                    <div className="flex flex-wrap gap-2 justify-center">
                       <button
                         onClick={() => openNewBanner('hero')}
                         className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-xl transition-colors text-sm"
@@ -2056,6 +2255,38 @@ export default function AdminPage() {
               await addSubcategory(data as Omit<Subcategory, 'id'>)
             }
             setShowSubcategoryModal(false)
+          }}
+        />
+      )}
+
+      {/* Promo Code Modal */}
+      {showPromoCodeModal && (
+        <PromoCodeModal
+          promo={editingPromoCode}
+          onClose={() => setShowPromoCodeModal(false)}
+          onSave={async (data) => {
+            if (editingPromoCode?.id) {
+              await updatePromoCode(editingPromoCode.id, data)
+            } else {
+              await addPromoCode(data as Omit<PromoCode, 'id' | 'createdAt' | 'updatedAt'>)
+            }
+            setShowPromoCodeModal(false)
+          }}
+        />
+      )}
+
+      {/* Upsell Item Modal */}
+      {showUpsellModal && (
+        <UpsellItemModal
+          item={editingUpsellItem}
+          onClose={() => setShowUpsellModal(false)}
+          onSave={async (data) => {
+            if (editingUpsellItem?.id) {
+              await updateUpsellItem(editingUpsellItem.id, data)
+            } else {
+              await addUpsellItem(data as Omit<UpsellItem, 'id' | 'createdAt' | 'updatedAt'>)
+            }
+            setShowUpsellModal(false)
           }}
         />
       )}
@@ -3731,6 +3962,305 @@ function CategoryModal({
             <div>
               <span className="text-sm font-medium text-text block">Prikaži na početnoj</span>
               <span className="text-xs text-muted">Kategorija će biti vidljiva na početnoj stranici</span>
+            </div>
+          </label>
+
+          <div className="flex gap-3 pt-4">
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 border border-white/10 rounded-xl text-text hover:bg-white/5 transition-colors">
+              Odustani
+            </button>
+            <button type="submit" disabled={saving} className="flex-1 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50">
+              {saving ? 'Spremanje...' : 'Spremi'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+
+// Promo Code Modal Component
+function PromoCodeModal({ 
+  promo, 
+  onClose, 
+  onSave 
+}: { 
+  promo: PromoCode | null
+  onClose: () => void
+  onSave: (data: Partial<PromoCode>) => Promise<void>
+}) {
+  const [formData, setFormData] = useState({
+    code: promo?.code || '',
+    type: (promo?.type || 'percentage') as PromoCodeType,
+    value: promo?.value || 10,
+    active: promo?.active ?? true,
+  })
+  const [saving, setSaving] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.code.trim() || formData.value <= 0) return
+    setSaving(true)
+    await onSave({
+      code: formData.code.trim().toUpperCase(),
+      type: formData.type,
+      value: formData.value,
+      active: formData.active,
+    })
+    setSaving(false)
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-surface rounded-2xl w-full max-w-md">
+        <div className="border-b border-white/5 px-6 py-4 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-text">
+            {promo ? 'Uredi promo kod' : 'Novi promo kod'}
+          </h3>
+          <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg">
+            <X className="w-5 h-5 text-muted" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm text-muted mb-1">Kod *</label>
+            <input
+              type="text"
+              value={formData.code}
+              onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})}
+              placeholder="ELES10"
+              className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-text tracking-wide focus:outline-none focus:border-primary uppercase"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-muted mb-1">Tip popusta *</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, type: 'percentage' })}
+                className={`px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all border ${
+                  formData.type === 'percentage'
+                    ? 'bg-primary/15 border-primary/40 text-primary'
+                    : 'bg-background border-white/10 text-muted hover:border-white/20'
+                }`}
+              >
+                % Procenat
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, type: 'fixed' })}
+                className={`px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all border ${
+                  formData.type === 'fixed'
+                    ? 'bg-primary/15 border-primary/40 text-primary'
+                    : 'bg-background border-white/10 text-muted hover:border-white/20'
+                }`}
+              >
+                KM Fiksni iznos
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm text-muted mb-1">
+              {formData.type === 'percentage' ? 'Procenat popusta (%) *' : 'Iznos popusta (KM) *'}
+            </label>
+            <input
+              type="number"
+              min="0"
+              step={formData.type === 'percentage' ? '1' : '0.01'}
+              value={formData.value}
+              onChange={e => setFormData({...formData, value: parseFloat(e.target.value) || 0})}
+              placeholder={formData.type === 'percentage' ? '10' : '5.00'}
+              className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-text focus:outline-none focus:border-primary"
+              required
+            />
+            <p className="text-[11px] text-muted mt-1">
+              {formData.type === 'percentage'
+                ? 'Popust se računa na ukupan iznos (proizvodi + dodaci).'
+                : 'Fiksni popust u KM, ne može biti veći od ukupnog iznosa.'}
+            </p>
+          </div>
+
+          <label className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+            formData.active ? 'bg-accent/10 border-accent/30' : 'bg-background border-white/10 hover:border-white/20'
+          }`}>
+            <input
+              type="checkbox"
+              checked={formData.active}
+              onChange={e => setFormData({...formData, active: e.target.checked})}
+              className="w-5 h-5 rounded accent-primary"
+            />
+            <div>
+              <span className="text-sm font-medium text-text block">Aktivan</span>
+              <span className="text-xs text-muted">Kupci mogu primijeniti ovaj kod na checkoutu</span>
+            </div>
+          </label>
+
+          <div className="flex gap-3 pt-4">
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 border border-white/10 rounded-xl text-text hover:bg-white/5 transition-colors">
+              Odustani
+            </button>
+            <button type="submit" disabled={saving} className="flex-1 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50">
+              {saving ? 'Spremanje...' : 'Spremi'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// Upsell Item Modal Component
+function UpsellItemModal({ 
+  item, 
+  onClose, 
+  onSave 
+}: { 
+  item: UpsellItem | null
+  onClose: () => void
+  onSave: (data: Partial<UpsellItem>) => Promise<void>
+}) {
+  const [formData, setFormData] = useState({
+    name: item?.name || '',
+    description: item?.description || '',
+    price: item?.price || 0,
+    originalPrice: item?.originalPrice || 0,
+    badge: item?.badge || '',
+    image: item?.image || '',
+    sortOrder: item?.sortOrder ?? 0,
+    active: item?.active ?? true,
+  })
+  const [saving, setSaving] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.name.trim() || formData.price <= 0) return
+    setSaving(true)
+    await onSave({
+      ...formData,
+      originalPrice: formData.originalPrice > 0 ? formData.originalPrice : undefined,
+      image: formData.image.trim() || undefined,
+      description: formData.description.trim() || undefined,
+      badge: formData.badge.trim() || undefined,
+    })
+    setSaving(false)
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-surface rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="border-b border-white/5 px-6 py-4 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-text">
+            {item ? 'Uredi up-sell stavku' : 'Nova up-sell stavka'}
+          </h3>
+          <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg">
+            <X className="w-5 h-5 text-muted" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm text-muted mb-1">Naziv *</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={e => setFormData({...formData, name: e.target.value})}
+              placeholder="npr. Memorijska kartica 32GB"
+              className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-text focus:outline-none focus:border-primary"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-muted mb-1">Opis</label>
+            <textarea
+              value={formData.description}
+              onChange={e => setFormData({...formData, description: e.target.value})}
+              rows={2}
+              placeholder="npr. Brže snimanje i više prostora za vaše snimke."
+              className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-text focus:outline-none focus:border-primary resize-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm text-muted mb-1">Cijena (KM) *</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.price}
+                onChange={e => setFormData({...formData, price: parseFloat(e.target.value) || 0})}
+                placeholder="20.00"
+                className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-text focus:outline-none focus:border-primary"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-muted mb-1">Stara cijena (KM)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.originalPrice}
+                onChange={e => setFormData({...formData, originalPrice: parseFloat(e.target.value) || 0})}
+                placeholder="25.00"
+                className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-text focus:outline-none focus:border-primary"
+              />
+              <p className="text-[11px] text-muted mt-1">Prikazuje se precrtana radi efekta sniženja</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm text-muted mb-1">Oznaka (badge)</label>
+              <input
+                type="text"
+                value={formData.badge}
+                onChange={e => setFormData({...formData, badge: e.target.value})}
+                placeholder="Najpopularnije"
+                className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-text focus:outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-muted mb-1">Redoslijed</label>
+              <input
+                type="number"
+                value={formData.sortOrder}
+                onChange={e => setFormData({...formData, sortOrder: parseInt(e.target.value) || 0})}
+                className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-text focus:outline-none focus:border-primary"
+              />
+              <p className="text-[11px] text-muted mt-1">Manji broj = prikazuje se ranije</p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm text-muted mb-1">Slika (URL, opcionalno)</label>
+            <input
+              type="text"
+              value={formData.image}
+              onChange={e => setFormData({...formData, image: e.target.value})}
+              placeholder="https://... ili /assets/images/..."
+              className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-text focus:outline-none focus:border-primary"
+            />
+          </div>
+
+          <label className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+            formData.active ? 'bg-accent/10 border-accent/30' : 'bg-background border-white/10 hover:border-white/20'
+          }`}>
+            <input
+              type="checkbox"
+              checked={formData.active}
+              onChange={e => setFormData({...formData, active: e.target.checked})}
+              className="w-5 h-5 rounded accent-primary"
+            />
+            <div>
+              <span className="text-sm font-medium text-text block">Aktivno</span>
+              <span className="text-xs text-muted">Stavka se nudi kupcima na checkoutu</span>
             </div>
           </label>
 

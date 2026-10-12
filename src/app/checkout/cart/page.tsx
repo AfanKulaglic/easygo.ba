@@ -6,9 +6,11 @@ import { ChevronLeft, Package, MapPin, Phone, Mail, User, AlertCircle, CheckCirc
 import Link from 'next/link'
 import { useCartStore } from '@/store/cartStore'
 import { addOrder } from '@/lib/realtimeProducts'
-import { getGuestDeviceId } from '@/lib/realtimeProducts'
+import { getGuestDeviceId, calculatePromoDiscount, type UpsellItem } from '@/lib/realtimeProducts'
 import { useAuth } from '@/context/AuthContext'
 import { fbPixel } from '@/lib/fbpixel'
+import { usePromoCodes, useUpsellItems } from '@/hooks/useCheckoutExtras'
+import { UpsellSection, PromoSection } from '@/components/checkout/CheckoutExtras'
 
 export default function CartCheckoutPage() {
   const router = useRouter()
@@ -27,8 +29,16 @@ export default function CartCheckoutPage() {
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [orderComplete, setOrderComplete] = useState(false)
   const [orderedItems, setOrderedItems] = useState<typeof items>([])
+  const [orderedAddons, setOrderedAddons] = useState<{ id: string; name: string; price: number }[]>([])
+  const [orderedDiscount, setOrderedDiscount] = useState(0)
   const [orderedTotal, setOrderedTotal] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Up-sell i promo kod
+  const promoCodes = usePromoCodes()
+  const upsellItems = useUpsellItems()
+  const [selectedAddons, setSelectedAddons] = useState<{ id: string; name: string; price: number }[]>([])
+  const [appliedPromoCode, setAppliedPromoCode] = useState<string | null>(null)
 
   // Auto-fill form with user data
   useEffect(() => {
@@ -56,6 +66,20 @@ export default function CartCheckoutPage() {
 
   const totalPrice = getTotalPrice()
 
+  const addonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0)
+  const baseAmount = totalPrice + addonsTotal
+  const promoResult = appliedPromoCode ? calculatePromoDiscount(appliedPromoCode, promoCodes, baseAmount) : null
+  const discount = promoResult?.discount ?? 0
+  const finalTotal = Math.max(totalPrice + addonsTotal - discount, 0)
+
+  const handleToggleAddon = (item: UpsellItem) => {
+    setSelectedAddons(prev =>
+      prev.some(a => a.id === item.id)
+        ? prev.filter(a => a.id !== item.id)
+        : [...prev, { id: item.id!, name: item.name, price: item.price }]
+    )
+  }
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
     
@@ -78,7 +102,7 @@ export default function CartCheckoutPage() {
       fbPixel.initiateCheckout({
         content_ids: items.map(i => i.id),
         num_items: items.reduce((s, i) => s + i.quantity, 0),
-        value: getTotalPrice(),
+        value: finalTotal,
         currency: 'BAM',
       })
       setShowConfirmation(true)
@@ -98,7 +122,12 @@ export default function CartCheckoutPage() {
           price: item.price,
           quantity: item.quantity
         })),
-        totalPrice: totalPrice,
+        addons: selectedAddons.length > 0
+          ? selectedAddons.map(a => ({ ...a, quantity: 1 }))
+          : undefined,
+        promoCode: appliedPromoCode || undefined,
+        discountAmount: discount > 0 ? discount : undefined,
+        totalPrice: finalTotal,
         customerName: formData.firstName,
         customerSurname: formData.lastName,
         customerEmail: formData.email,
@@ -108,10 +137,12 @@ export default function CartCheckoutPage() {
       })
       // Save order details before clearing cart
       setOrderedItems([...items])
-      setOrderedTotal(totalPrice)
+      setOrderedAddons([...selectedAddons])
+      setOrderedDiscount(discount)
+      setOrderedTotal(finalTotal)
       // Meta Pixel: Purchase
       fbPixel.purchase({
-        value: totalPrice,
+        value: finalTotal,
         currency: 'BAM',
         content_ids: items.map(i => i.id),
         num_items: items.reduce((s, i) => s + i.quantity, 0),
@@ -170,6 +201,18 @@ export default function CartCheckoutPage() {
                     <span className="text-text">{(item.price * item.quantity).toFixed(2)} KM</span>
                   </div>
                 ))}
+                {orderedAddons.map((addon) => (
+                  <div key={addon.id} className="flex justify-between">
+                    <span className="text-muted">+ {addon.name}</span>
+                    <span className="text-text">{addon.price.toFixed(2)} KM</span>
+                  </div>
+                ))}
+                {orderedDiscount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted">Popust ({appliedPromoCode})</span>
+                    <span className="text-accent">-{orderedDiscount.toFixed(2)} KM</span>
+                  </div>
+                )}
               </div>
               <div className="flex justify-between pt-2">
                 <span className="text-muted">Ukupno za platiti:</span>
@@ -287,10 +330,22 @@ export default function CartCheckoutPage() {
                     <span className="text-sm font-medium text-text">{(item.price * item.quantity).toFixed(2)} KM</span>
                   </div>
                 ))}
+                {selectedAddons.map((addon) => (
+                  <div key={addon.id} className="flex justify-between text-sm">
+                    <span className="text-muted">+ {addon.name}</span>
+                    <span className="text-text">{addon.price.toFixed(2)} KM</span>
+                  </div>
+                ))}
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted">Popust ({appliedPromoCode})</span>
+                    <span className="text-accent">-{discount.toFixed(2)} KM</span>
+                  </div>
+                )}
               </div>
               <div className="flex justify-between items-center pt-3 border-t border-white/5">
                 <span className="text-sm text-muted">Ukupno za platiti:</span>
-                <span className="text-lg font-bold text-primary">{totalPrice.toFixed(2)} KM</span>
+                <span className="text-lg font-bold text-primary">{finalTotal.toFixed(2)} KM</span>
               </div>
             </div>
 
@@ -448,6 +503,22 @@ export default function CartCheckoutPage() {
                 {errors.email && <p className="text-xs text-danger mt-1">{errors.email}</p>}
               </div>
 
+              {/* Up-sell dodaci */}
+              <UpsellSection
+                items={upsellItems}
+                selectedIds={selectedAddons.map(a => a.id)}
+                onToggle={handleToggleAddon}
+              />
+
+              {/* Promo kod */}
+              <PromoSection
+                promoCodes={promoCodes}
+                baseAmount={baseAmount}
+                appliedCode={appliedPromoCode}
+                onApply={setAppliedPromoCode}
+                onRemove={() => setAppliedPromoCode(null)}
+              />
+
               {/* Submit Button - Mobile */}
               <button
                 type="submit"
@@ -489,16 +560,31 @@ export default function CartCheckoutPage() {
                   <span className="text-muted">Cijena proizvoda</span>
                   <span className="text-text">{totalPrice.toFixed(2)} KM</span>
                 </div>
+                {selectedAddons.length > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted">Dodaci ({selectedAddons.length})</span>
+                    <span className="text-text">+{addonsTotal.toFixed(2)} KM</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted">Dostava</span>
                   <span className="text-accent">Besplatna</span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted">Promo kod: {appliedPromoCode}</span>
+                    <span className="text-accent">-{discount.toFixed(2)} KM</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-between items-center pt-4">
                 <span className="font-semibold text-text">Ukupno</span>
-                <span className="text-xl font-bold text-primary">{totalPrice.toFixed(2)} KM</span>
+                <span className="text-xl font-bold text-primary">{finalTotal.toFixed(2)} KM</span>
               </div>
+              {discount > 0 && (
+                <p className="text-xs text-accent mt-2 text-right">Ušteda: {discount.toFixed(2)} KM</p>
+              )}
 
               <button
                 onClick={handleSubmit}
@@ -537,7 +623,10 @@ export default function CartCheckoutPage() {
           </div>
           <div className="flex justify-between items-center pt-3 mt-3 border-t border-white/5">
             <div>
-              <p className="text-lg font-bold text-primary">{totalPrice.toFixed(2)} KM</p>
+              {discount > 0 && (
+                <p className="text-xs text-accent mb-0.5">Ušteda: {discount.toFixed(2)} KM</p>
+              )}
+              <p className="text-lg font-bold text-primary">{finalTotal.toFixed(2)} KM</p>
               <p className="text-xs text-accent">Besplatna dostava</p>
             </div>
           </div>

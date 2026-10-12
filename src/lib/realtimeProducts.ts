@@ -111,11 +111,21 @@ export interface OrderItem {
   quantity: number
 }
 
+export interface OrderAddon {
+  id: string
+  name: string
+  price: number
+  quantity: number
+}
+
 export interface Order {
   id?: string
   userId?: string
   guestDeviceId?: string
   items: OrderItem[]
+  addons?: OrderAddon[]
+  promoCode?: string
+  discountAmount?: number
   totalPrice: number
   customerName: string
   customerSurname: string
@@ -743,4 +753,162 @@ export const subscribeToBanners = (callback: (banners: Banner[]) => void) => {
     console.error('[Realtime DB] Banners subscription error:', error)
     callback([])
   })
+}
+
+// Promo kodovi — popust na checkoutu.
+export type PromoCodeType = 'percentage' | 'fixed'
+
+export interface PromoCode {
+  id?: string
+  code: string
+  /** 'percentage' → procenat od iznosa, 'fixed' → fiksni iznos u KM. */
+  type: PromoCodeType
+  value: number
+  /** Samo aktivni kodovi se primjenjuju na checkoutu. */
+  active: boolean
+  createdAt?: number
+  updatedAt?: number
+}
+
+export const getPromoCodes = async (): Promise<PromoCode[]> => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) return []
+  try {
+    const snapshot = await get(ref(db, 'promoCodes'))
+    return objectToArray<PromoCode>(snapshot.val())
+  } catch (error) {
+    console.error('[Realtime DB] Error fetching promo codes:', error)
+    return []
+  }
+}
+
+export const addPromoCode = async (promo: Omit<PromoCode, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) throw new Error('Database not initialized')
+  const cleanPromo = deepCleanUndefined(promo)
+  const newRef = push(ref(db, 'promoCodes'))
+  await set(newRef, {
+    ...(cleanPromo as Record<string, unknown>),
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  })
+  return newRef.key!
+}
+
+export const updatePromoCode = async (id: string, promo: Partial<PromoCode>): Promise<void> => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) throw new Error('Database not initialized')
+  const cleanPromo = deepCleanUndefined(promo)
+  await update(ref(db, `promoCodes/${id}`), {
+    ...(cleanPromo as Record<string, unknown>),
+    updatedAt: Date.now()
+  })
+}
+
+export const deletePromoCode = async (id: string): Promise<void> => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) throw new Error('Database not initialized')
+  await remove(ref(db, `promoCodes/${id}`))
+}
+
+export const subscribeToPromoCodes = (callback: (promoCodes: PromoCode[]) => void) => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) {
+    callback([])
+    return () => {}
+  }
+  return onValue(ref(db, 'promoCodes'), (snapshot) => {
+    callback(objectToArray<PromoCode>(snapshot.val()))
+  }, (error) => {
+    console.error('[Realtime DB] Promo codes subscription error:', error)
+    callback([])
+  })
+}
+
+// Up-sell stavke — dodatni artikli koji se nude na checkoutu (npr. memorijska kartica).
+export interface UpsellItem {
+  id?: string
+  name: string
+  description?: string
+  price: number
+  /** Stara cijena za prikaz sniženja; ako nije postavljena, prikazuje se samo cijena. */
+  originalPrice?: number
+  /** Oznaka poput "Najpopularnije". */
+  badge?: string
+  image?: string
+  active: boolean
+  /** Redoslijed prikazivanja (manji broj = ranije). */
+  sortOrder?: number
+  createdAt?: number
+  updatedAt?: number
+}
+
+export const getUpsellItems = async (): Promise<UpsellItem[]> => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) return []
+  try {
+    const snapshot = await get(ref(db, 'upsellItems'))
+    return objectToArray<UpsellItem>(snapshot.val())
+  } catch (error) {
+    console.error('[Realtime DB] Error fetching upsell items:', error)
+    return []
+  }
+}
+
+export const addUpsellItem = async (item: Omit<UpsellItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) throw new Error('Database not initialized')
+  const cleanItem = deepCleanUndefined(item)
+  const newRef = push(ref(db, 'upsellItems'))
+  await set(newRef, {
+    ...(cleanItem as Record<string, unknown>),
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  })
+  return newRef.key!
+}
+
+export const updateUpsellItem = async (id: string, item: Partial<UpsellItem>): Promise<void> => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) throw new Error('Database not initialized')
+  const cleanItem = deepCleanUndefined(item)
+  await update(ref(db, `upsellItems/${id}`), {
+    ...(cleanItem as Record<string, unknown>),
+    updatedAt: Date.now()
+  })
+}
+
+export const deleteUpsellItem = async (id: string): Promise<void> => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) throw new Error('Database not initialized')
+  await remove(ref(db, `upsellItems/${id}`))
+}
+
+export const subscribeToUpsellItems = (callback: (items: UpsellItem[]) => void) => {
+  const db = getFirebaseRealtimeDb()
+  if (!db) {
+    callback([])
+    return () => {}
+  }
+  return onValue(ref(db, 'upsellItems'), (snapshot) => {
+    callback(objectToArray<UpsellItem>(snapshot.val()))
+  }, (error) => {
+    console.error('[Realtime DB] Upsell items subscription error:', error)
+    callback([])
+  })
+}
+
+// Provjera promo koda i izračun popusta. Vraća popust u KM ili null ako kod nije važeći.
+export const calculatePromoDiscount = (
+  code: string,
+  promoCodes: PromoCode[],
+  baseAmount: number
+): { discount: number; promo: PromoCode } | null => {
+  const normalized = code.trim().toUpperCase()
+  const promo = promoCodes.find(p => p.code.trim().toUpperCase() === normalized && p.active)
+  if (!promo || promo.value <= 0 || baseAmount <= 0) return null
+  const discount = promo.type === 'fixed'
+    ? Math.min(promo.value, baseAmount)
+    : Math.min((baseAmount * promo.value) / 100, baseAmount)
+  return { discount: Math.round(discount * 100) / 100, promo }
 }

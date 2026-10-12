@@ -6,9 +6,11 @@ import { ChevronLeft, Package, MapPin, Phone, Mail, User, AlertCircle, CheckCirc
 import Link from 'next/link'
 import { useProductById } from '@/hooks/useProducts'
 import { addOrder } from '@/lib/realtimeProducts'
-import { getGuestDeviceId } from '@/lib/realtimeProducts'
+import { getGuestDeviceId, calculatePromoDiscount, type UpsellItem } from '@/lib/realtimeProducts'
 import { useAuth } from '@/context/AuthContext'
 import { fbPixel } from '@/lib/fbpixel'
+import { usePromoCodes, useUpsellItems } from '@/hooks/useCheckoutExtras'
+import { UpsellSection, PromoSection } from '@/components/checkout/CheckoutExtras'
 
 const isImageUrl = (str: string) => str?.startsWith('http') || str?.startsWith('/') || str?.startsWith('data:')
 
@@ -41,6 +43,12 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [showTrackingPopup, setShowTrackingPopup] = useState(false)
+
+  // Up-sell i promo kod
+  const promoCodes = usePromoCodes()
+  const upsellItems = useUpsellItems()
+  const [selectedAddons, setSelectedAddons] = useState<{ id: string; name: string; price: number }[]>([])
+  const [appliedPromoCode, setAppliedPromoCode] = useState<string | null>(null)
 
   // Auto-fill form with user data
   useEffect(() => {
@@ -79,6 +87,20 @@ export default function CheckoutPage() {
   // Calculate price based on variant or base price
   const unitPrice = selectedVariant ? selectedVariant.price : product.price
   const totalPrice = unitPrice * quantity
+
+  const addonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0)
+  const baseAmount = totalPrice + addonsTotal
+  const promoResult = appliedPromoCode ? calculatePromoDiscount(appliedPromoCode, promoCodes, baseAmount) : null
+  const discount = promoResult?.discount ?? 0
+  const finalTotal = Math.max(totalPrice + addonsTotal - discount, 0)
+
+  const handleToggleAddon = (item: UpsellItem) => {
+    setSelectedAddons(prev =>
+      prev.some(a => a.id === item.id)
+        ? prev.filter(a => a.id !== item.id)
+        : [...prev, { id: item.id!, name: item.name, price: item.price }]
+    )
+  }
   
   // Get product name with variant
   const standardLabel = product.standardVariantLabel || 'Standardna'
@@ -110,7 +132,7 @@ export default function CheckoutPage() {
       fbPixel.initiateCheckout({
         content_ids: [product.id!],
         num_items: quantity,
-        value: totalPrice,
+        value: finalTotal,
         currency: 'BAM',
       })
       setShowConfirmation(true)
@@ -131,7 +153,12 @@ export default function CheckoutPage() {
           quantity: quantity,
           selectedVariants: selectedVariant?.value || (hasVariants ? standardLabel : undefined)
         }],
-        totalPrice: totalPrice,
+        addons: selectedAddons.length > 0
+          ? selectedAddons.map(a => ({ ...a, quantity: 1 }))
+          : undefined,
+        promoCode: appliedPromoCode || undefined,
+        discountAmount: discount > 0 ? discount : undefined,
+        totalPrice: finalTotal,
         customerName: formData.firstName,
         customerSurname: formData.lastName,
         customerEmail: formData.email,
@@ -141,7 +168,7 @@ export default function CheckoutPage() {
       })
       // Meta Pixel: Purchase
       fbPixel.purchase({
-        value: totalPrice,
+        value: finalTotal,
         currency: 'BAM',
         content_ids: [product.id!],
         content_name: productNameWithVariant,
@@ -205,9 +232,21 @@ export default function CheckoutPage() {
                 <span className="text-muted">Količina:</span>
                 <span className="text-text">{quantity} kom</span>
               </div>
+              {selectedAddons.map((addon) => (
+                <div key={addon.id} className="flex justify-between">
+                  <span className="text-muted">+ {addon.name}</span>
+                  <span className="text-text">{addon.price.toFixed(2)} KM</span>
+                </div>
+              ))}
+              {discount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted">Popust ({appliedPromoCode})</span>
+                  <span className="text-accent">-{discount.toFixed(2)} KM</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted">Ukupno za platiti:</span>
-                <span className="text-primary font-bold">{totalPrice.toFixed(2)} KM</span>
+                <span className="text-primary font-bold">{finalTotal.toFixed(2)} KM</span>
               </div>
               <div className="border-t border-white/5 pt-3 mt-3">
                 <span className="text-muted">Dostava na adresu:</span>
@@ -325,9 +364,21 @@ export default function CheckoutPage() {
                   <p className="text-xs text-muted">Količina: {quantity}</p>
                 </div>
               </div>
+              {selectedAddons.map((addon) => (
+                <div key={addon.id} className="flex justify-between text-sm">
+                  <span className="text-muted">+ {addon.name}</span>
+                  <span className="text-text">{addon.price.toFixed(2)} KM</span>
+                </div>
+              ))}
+              {discount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted">Popust ({appliedPromoCode})</span>
+                  <span className="text-accent">-{discount.toFixed(2)} KM</span>
+                </div>
+              )}
               <div className="flex justify-between items-center pt-3 border-t border-white/5">
                 <span className="text-sm text-muted">Ukupno za platiti:</span>
-                <span className="text-lg font-bold text-primary">{totalPrice.toFixed(2)} KM</span>
+                <span className="text-lg font-bold text-primary">{finalTotal.toFixed(2)} KM</span>
               </div>
             </div>
 
@@ -489,6 +540,22 @@ export default function CheckoutPage() {
                 {errors.email && <p className="text-xs text-danger mt-1">{errors.email}</p>}
               </div>
 
+              {/* Up-sell dodaci */}
+              <UpsellSection
+                items={upsellItems}
+                selectedIds={selectedAddons.map(a => a.id)}
+                onToggle={handleToggleAddon}
+              />
+
+              {/* Promo kod */}
+              <PromoSection
+                promoCodes={promoCodes}
+                baseAmount={baseAmount}
+                appliedCode={appliedPromoCode}
+                onApply={setAppliedPromoCode}
+                onRemove={() => setAppliedPromoCode(null)}
+              />
+
               <button type="submit" className="w-full lg:hidden bg-primary hover:bg-primary/90 text-white py-3.5 rounded-xl font-semibold transition-colors shadow-lg shadow-primary/25 mt-6">
                 Nastavi na potvrdu
               </button>
@@ -520,16 +587,31 @@ export default function CheckoutPage() {
                   <span className="text-muted">Cijena proizvoda</span>
                   <span className="text-text">{(unitPrice * quantity).toFixed(2)} KM</span>
                 </div>
+                {selectedAddons.length > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted">Dodaci ({selectedAddons.length})</span>
+                    <span className="text-text">+{addonsTotal.toFixed(2)} KM</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted">Dostava</span>
                   <span className="text-accent">Besplatna</span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted">Promo kod: {appliedPromoCode}</span>
+                    <span className="text-accent">-{discount.toFixed(2)} KM</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-between items-center pt-4">
                 <span className="font-semibold text-text">Ukupno</span>
-                <span className="text-xl font-bold text-primary">{totalPrice.toFixed(2)} KM</span>
+                <span className="text-xl font-bold text-primary">{finalTotal.toFixed(2)} KM</span>
               </div>
+              {discount > 0 && (
+                <p className="text-xs text-accent mt-2 text-right">Ušteda: {discount.toFixed(2)} KM</p>
+              )}
 
               <button onClick={handleSubmit} className="w-full bg-primary hover:bg-primary/90 text-white py-3.5 rounded-xl font-semibold transition-colors shadow-lg shadow-primary/25 mt-6">
                 Nastavi na potvrdu
@@ -557,7 +639,10 @@ export default function CheckoutPage() {
               <p className="text-xs text-muted">Količina: {quantity}</p>
             </div>
             <div className="text-right">
-              <p className="text-lg font-bold text-primary">{totalPrice.toFixed(2)} KM</p>
+              {discount > 0 && (
+                <p className="text-xs text-accent mb-0.5">Ušteda: {discount.toFixed(2)} KM</p>
+              )}
+              <p className="text-lg font-bold text-primary">{finalTotal.toFixed(2)} KM</p>
               <p className="text-xs text-accent">Besplatna dostava</p>
             </div>
           </div>
