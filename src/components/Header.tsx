@@ -457,13 +457,13 @@ export default function Header() {
 
         {/* RED 1 - logo + velika search traka + korisničke akcije */}
         <div className="bg-surface border-b border-white/10">
-          <div className="max-w-7xl mx-auto flex items-center gap-3 lg:gap-6 px-4 lg:px-8 h-[60px] lg:h-[80px]">
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-x-3 lg:gap-6 px-4 lg:px-8 py-2 lg:py-0 min-h-[60px] lg:h-[80px]">
             {/* Logo */}
             <Link href="/" className={`items-center flex-shrink-0 ${isFocused ? 'hidden lg:flex' : 'flex'}`}>
               <img
                 src="/assets/images/elesonic-logo.png"
                 alt="ELESONIC"
-                className="h-8 lg:h-10 w-auto object-contain"
+                className="h-8 lg:h-10 w-auto object-contain max-w-[150px] min-[360px]:max-w-none"
               />
             </Link>
 
@@ -529,12 +529,12 @@ export default function Header() {
               </form>
             </div>
 
-            {/* Mobile Search */}
+            {/* Mobile Search — svoj red ispod logoa i dugmadi da se ne preklapa */}
             <div
-              className={`relative z-50 transition-all duration-200 lg:hidden ${
+              className={`relative z-50 order-3 transition-all duration-200 lg:hidden ${
                 isFocused
-                  ? 'flex-1 min-w-0'
-                  : 'flex-1 min-w-0 mx-3 max-w-md'
+                  ? 'w-full min-w-0'
+                  : 'w-full min-w-0 mt-1.5'
               }`}
               ref={searchRef}
             >
@@ -709,7 +709,7 @@ export default function Header() {
             </div>
 
             {/* Right side - theme, Moj račun, Korpa, burger */}
-            <div className={`items-center gap-1.5 lg:gap-5 ${isFocused ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`order-2 items-center gap-1.5 lg:gap-5 lg:order-none ${isFocused ? 'hidden lg:flex' : 'flex'}`}>
               {/* Theme toggle - kružno dugme */}
               <button
                 onClick={toggleTheme}

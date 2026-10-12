@@ -162,7 +162,7 @@ export default function RootLayout({
               <CartSync />
               <IframeSync />
               <Header />
-              <main className="pt-[140px] lg:pt-[188px] pb-8 flex-1">
+              <main className="pt-[180px] lg:pt-[188px] pb-8 flex-1">
                   {children}
               </main>
               <Footer />
