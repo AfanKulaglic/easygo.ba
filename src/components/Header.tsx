@@ -709,7 +709,7 @@ export default function Header() {
             </div>
 
             {/* Right side - theme, Moj račun, Korpa, burger */}
-            <div className={`order-2 items-center gap-1.5 lg:gap-5 lg:order-none ${isFocused ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`order-2 ml-auto items-center gap-1.5 lg:gap-5 lg:order-none lg:ml-0 ${isFocused ? 'hidden lg:flex' : 'flex'}`}>
               {/* Theme toggle - kružno dugme */}
               <button
                 onClick={toggleTheme}
