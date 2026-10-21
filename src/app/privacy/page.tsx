@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ChevronLeft, Shield, Eye, Database, Cookie, UserCheck, Trash2, Mail } from 'lucide-react'
+import CompanyInfo from '@/components/CompanyInfo'
 
 export const metadata: Metadata = {
   title: 'Politika privatnosti',
@@ -43,6 +44,8 @@ export default function PrivacyPage() {
               </div>
             </div>
           </div>
+
+          <CompanyInfo />
 
           {/* Koje podatke prikupljamo */}
           <div className="bg-surface rounded-2xl p-5 lg:p-6 border border-white/5">

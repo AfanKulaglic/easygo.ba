@@ -10,6 +10,7 @@ import { ProductGridSkeleton } from '@/components/Loading'
 import { Product } from '@/lib/realtimeProducts'
 import { useCartStore } from '@/store/cartStore'
 import { fbPixel } from '@/lib/fbpixel'
+import { flyToCart } from '@/lib/flyToCart'
 
 type SortOption = 'default' | 'price-asc' | 'price-desc' | 'name' | 'newest'
 type ViewMode = 'grid' | 'list'
@@ -477,6 +478,7 @@ function ListProductCard({ product }: { product: Product }) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
     addToCart({ id: product.id!, name: product.name, price: product.price, image: product.image })
+    flyToCart(e.currentTarget as HTMLElement, product.image)
     fbPixel.addToCart({ content_ids: [product.id!], content_name: product.name, content_type: 'product', value: product.price, currency: 'BAM' })
   }
 

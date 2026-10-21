@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ChevronLeft, Truck, MapPin, Package, Search, Headphones, CreditCard, Calendar } from 'lucide-react'
+import CompanyInfo from '@/components/CompanyInfo'
 
 export const metadata: Metadata = {
   title: 'Dostava',
@@ -101,6 +102,8 @@ export default function DostavaPage() {
               Dostava putem Brze Pošte dostupna je na području <span className="text-text font-medium">cijele BiH</span> tokom 5 radnih dana. Dostava proizvoda se vrši do ulaza kuće ili zgrade. Dostava ne podrazumijeva unos u stan/kuću, kao ni montažu uređaja.
             </p>
           </div>
+
+          <CompanyInfo />
 
         </div>
       </div>

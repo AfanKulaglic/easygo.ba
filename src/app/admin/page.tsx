@@ -1294,6 +1294,14 @@ export default function AdminPage() {
                                 {item.originalPrice && item.originalPrice > item.price ? ` (stara: ${item.originalPrice.toFixed(2)} KM)` : ''}
                                 {item.sortOrder !== undefined && ` • redoslijed ${item.sortOrder}`}
                               </p>
+                              <p className="text-[11px] text-muted/80 mt-1 truncate">
+                                {item.productIds?.length || item.categorySlugs?.length
+                                  ? 'Vrijedi za: ' + [
+                                      ...(item.categorySlugs || []).map(s => categories.find(c => c.slug === s)?.name || s),
+                                      ...(item.productIds || []).map(id => products.find(p => p.id === id)?.name || 'Nepoznat proizvod'),
+                                    ].join(', ')
+                                  : 'Vrijedi za sve proizvode'}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
@@ -1950,7 +1958,7 @@ export default function AdminPage() {
                 <div className="flex items-center justify-between mb-4 lg:mb-6">
                   <div>
                     <h2 className="text-lg lg:text-xl font-semibold text-text">Baneri</h2>
-                    <p className="text-xs text-muted mt-0.5 hidden lg:block">Hero slajder i reklamni baneri na početnoj</p>
+                    <p className="text-xs text-muted mt-0.5 hidden lg:block">Hero slajder i reklamni baneri (2 u redu) na početnoj</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
@@ -1997,9 +2005,9 @@ export default function AdminPage() {
                 <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 mb-4">
                   <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
                   <p className="text-[11px] leading-relaxed text-amber-300/90">
-                    Hero baner (slajder na vrhu): preporučeno <span className="font-semibold">1216×384 px</span> (retina <span className="font-semibold">2432×768 px</span>). Reklamni baner (ispod): <span className="font-semibold">1216×208 px</span> (retina <span className="font-semibold">2432×416 px</span>).{' '}
-                    Format <span className="font-semibold">webp</span> ili <span className="font-semibold">jpg</span>. Slika se razvlači da popuni karticu i nikada se ne reže,
-                    pa pri drugačijem odnosu dolazi do izobličenja.
+                    Hero baner (slajder na vrhu): preporučeno <span className="font-semibold">1216×384 px</span> (retina <span className="font-semibold">2432×768 px</span>). Reklamni baneri (dva u redu, 50/50): svaki <span className="font-semibold">1200×600 px</span> (odnos 2:1).{' '}
+                    Format <span className="font-semibold">webp</span> ili <span className="font-semibold">jpg</span>. Slika se centrirano kroji (object-cover) ako odnos nije tačan,
+                    pa držite važan sadržaj u sredini.
                   </p>
                 </div>
 
@@ -2018,9 +2026,9 @@ export default function AdminPage() {
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4">
                       {/* Preview */}
-                      <div className="w-full sm:w-48 h-28 bg-background rounded-xl overflow-hidden border border-white/10 flex items-center justify-center shrink-0">
+                      <div className={`w-full sm:w-48 ${bannerForm.type === 'hero' ? 'h-28' : 'aspect-[2/1]'} bg-background rounded-xl overflow-hidden border border-white/10 flex items-center justify-center shrink-0`}>
                         {isValidMediaUrl(bannerForm.image) ? (
-                          <img src={bannerForm.image} alt="Preview" className="w-full h-full object-fill" />
+                          <img src={bannerForm.image} alt="Preview" className="w-full h-full object-cover" />
                         ) : (
                           <div className="text-center">
                             <Layers className="w-6 h-6 text-muted mx-auto mb-1" />
@@ -2053,7 +2061,7 @@ export default function AdminPage() {
                                   : 'bg-background border-white/10 text-muted hover:border-white/20'
                               }`}
                             >
-                              🖼 Reklamni (ispod)
+                              🖼 Reklamni (2 u redu)
                             </button>
                           </div>
                         </div>
@@ -2069,7 +2077,7 @@ export default function AdminPage() {
                             required
                           />
                           <p className="text-[11px] text-muted mt-1">
-                            Preporučeno: {bannerForm.type === 'hero' ? '1216×384 px (retina 2432×768 px)' : '1216×208 px (retina 2432×416 px)'} — webp ili jpg.
+                            Preporučeno: {bannerForm.type === 'hero' ? '1216×384 px (retina 2432×768 px)' : '1200×600 px po baneru (odnos 2:1)'} — webp ili jpg.
                           </p>
                         </div>
                         {/* Klik link */}
@@ -2084,19 +2092,19 @@ export default function AdminPage() {
                           />
                           <p className="text-[11px] text-muted mt-1">Klik na baner vodi na ovaj link. Ostavi prazno da baner ne bude klikabilan.</p>
                         </div>
-                        {/* Redoslijed (samo hero) */}
-                        {bannerForm.type === 'hero' && (
-                          <div>
-                            <label className="block text-xs text-muted mb-1.5">Redoslijed slajda</label>
-                            <input
-                              type="number"
-                              value={bannerForm.order || ''}
-                              onChange={e => setBannerForm({ ...bannerForm, order: parseInt(e.target.value) || 0 })}
-                              placeholder="0 = prvi, 1 = drugi, 2 = treći..."
-                              className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-primary"
-                            />
-                          </div>
-                        )}
+                        {/* Redoslijed */}
+                        <div>
+                          <label className="block text-xs text-muted mb-1.5">
+                            {bannerForm.type === 'hero' ? 'Redoslijed slajda' : 'Redoslijed banera (0 = lijevi)'}
+                          </label>
+                          <input
+                            type="number"
+                            value={bannerForm.order || ''}
+                            onChange={e => setBannerForm({ ...bannerForm, order: parseInt(e.target.value) || 0 })}
+                            placeholder={bannerForm.type === 'hero' ? '0 = prvi, 1 = drugi, 2 = treći...' : '0 = lijevi, 1 = desni'}
+                            className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-primary"
+                          />
+                        </div>
                         {/* Aktivno */}
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
@@ -2173,7 +2181,7 @@ export default function AdminPage() {
                         )}
                         {showPromo && promoBanners.length > 0 && (
                           <div>
-                            <p className="text-[11px] font-medium text-muted uppercase tracking-wide mb-2">Reklamni baneri ({promoBanners.length})</p>
+                            <p className="text-[11px] font-medium text-muted uppercase tracking-wide mb-2">Reklamni baneri — 2 u redu ({promoBanners.length})</p>
                             <div className="space-y-3">
                               {promoBanners.map(banner => renderBannerCard(banner))}
                             </div>
@@ -2279,6 +2287,8 @@ export default function AdminPage() {
       {showUpsellModal && (
         <UpsellItemModal
           item={editingUpsellItem}
+          products={products}
+          categories={categories.length ? categories : (localCategories as Category[])}
           onClose={() => setShowUpsellModal(false)}
           onSave={async (data) => {
             if (editingUpsellItem?.id) {
@@ -2364,6 +2374,9 @@ function ProductModal({
     image: product?.image || '',
     images: product?.images || [] as string[],
     videoUrl: product?.videoUrl || '',
+    guideVideoUrl: product?.guideVideoUrl || '',
+    guideTitle: product?.guideTitle || '',
+    guideDescription: product?.guideDescription || '',
     description: product?.description || '',
     rating: product?.rating || 5,
     reviews: product?.reviews || 0,
@@ -2494,6 +2507,7 @@ function ProductModal({
     const mainImage = formData.image.trim()
     const galleryImages = cleanUrlList(formData.images)
     const videoUrl = formData.videoUrl.trim()
+    const guideVideoUrl = formData.guideVideoUrl.trim()
 
     if (!isValidMediaUrl(mainImage) || isDataMedia(mainImage)) {
       alert('Glavna slika mora biti URL (http, https ili /putanja).')
@@ -2505,6 +2519,11 @@ function ProductModal({
       return
     }
 
+    if (guideVideoUrl && !/^https?:\/\/\S+$/i.test(guideVideoUrl)) {
+      alert('Video vodič je moguće dodati isključivo kao link (http:// ili https://). Upload fajla nije podržan.')
+      return
+    }
+
     setSaving(true)
     await onSave({
       ...formData,
@@ -2513,6 +2532,9 @@ function ProductModal({
       features: formData.features.split('\n').filter(f => f.trim()),
       images: galleryImages.length > 0 ? galleryImages : undefined,
       videoUrl: videoUrl || undefined,
+      guideVideoUrl,
+      guideTitle: formData.guideTitle.trim(),
+      guideDescription: formData.guideDescription.trim(),
       originalPrice: formData.originalPrice || undefined,
       discountPercent: formData.discountPercent || undefined,
       soldPercent: formData.soldPercent || undefined,
@@ -3082,6 +3104,49 @@ function ProductModal({
                   )}
                 </div>
                 <p className="text-xs text-muted mt-1.5">Podržani formati: YouTube, Vimeo, ili direktni link na video (.mp4, .webm)</p>
+              </div>
+
+              {/* Video vodič */}
+              <div className="rounded-xl border border-white/10 bg-background/40 p-4 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <label className="block text-sm text-muted">Video vodič — samo link (opcionalno)</label>
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">Kartica na stranici proizvoda</span>
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <input
+                      type="url"
+                      value={formData.guideVideoUrl}
+                      onChange={e => setFormData({...formData, guideVideoUrl: e.target.value})}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-text placeholder:text-muted/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                    />
+                  </div>
+                  {formData.guideVideoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({...formData, guideVideoUrl: ''})}
+                      className="px-3 py-2 bg-danger/20 hover:bg-danger/30 text-danger rounded-xl transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={formData.guideTitle}
+                  onChange={e => setFormData({...formData, guideTitle: e.target.value})}
+                  placeholder="Upute za povezivanje sa kamerom"
+                  className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-text placeholder:text-muted/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                />
+                <textarea
+                  value={formData.guideDescription}
+                  onChange={e => setFormData({...formData, guideDescription: e.target.value})}
+                  rows={2}
+                  placeholder="Kratko objašnjenje: pogledajte video i saznajte kako proizvod povezati i podesiti."
+                  className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-text placeholder:text-muted/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none text-sm"
+                />
+                <p className="text-xs text-muted">Video se objavljuje na YouTube/Vimeo (ili drugi host) i ovdje se unosi samo link — upload fajla nije podržan. Ako je link prazan, kartica se ne prikazuje.</p>
               </div>
             </div>
 
@@ -4116,11 +4181,15 @@ function PromoCodeModal({
 
 // Upsell Item Modal Component
 function UpsellItemModal({ 
-  item, 
+  item,
+  products,
+  categories,
   onClose, 
   onSave 
 }: { 
   item: UpsellItem | null
+  products: Product[]
+  categories: Category[]
   onClose: () => void
   onSave: (data: Partial<UpsellItem>) => Promise<void>
 }) {
@@ -4133,8 +4202,35 @@ function UpsellItemModal({
     image: item?.image || '',
     sortOrder: item?.sortOrder ?? 0,
     active: item?.active ?? true,
+    productIds: item?.productIds || ([] as string[]),
+    categorySlugs: item?.categorySlugs || ([] as string[]),
   })
+  const [productSearch, setProductSearch] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const toggleProductId = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      productIds: prev.productIds.includes(id)
+        ? prev.productIds.filter(x => x !== id)
+        : [...prev.productIds, id],
+    }))
+  }
+
+  const toggleCategorySlug = (slug: string) => {
+    setFormData(prev => ({
+      ...prev,
+      categorySlugs: prev.categorySlugs.includes(slug)
+        ? prev.categorySlugs.filter(x => x !== slug)
+        : [...prev.categorySlugs, slug],
+    }))
+  }
+
+  const filteredProducts = products.filter(p => {
+    const term = productSearch.trim().toLowerCase()
+    if (!term) return true
+    return p.name.toLowerCase().includes(term) || (p.category || '').toLowerCase().includes(term)
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -4247,6 +4343,69 @@ function UpsellItemModal({
               placeholder="https://... ili /assets/images/..."
               className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-text focus:outline-none focus:border-primary"
             />
+          </div>
+
+          <div className="border-t border-white/5 pt-4">
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm text-muted">Vrijedi za</label>
+              {(formData.productIds.length > 0 || formData.categorySlugs.length > 0) && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, productIds: [], categorySlugs: [] })}
+                  className="text-[11px] text-primary hover:underline"
+                >
+                  Svi proizvodi
+                </button>
+              )}
+            </div>
+            <p className="text-[11px] text-muted mb-3">
+              Ako ništa ne odabereš, stavka se nudi uz svaki proizvod.
+            </p>
+
+            <span className="block text-xs font-medium text-text mb-1.5">Kategorije</span>
+            <div className="max-h-36 overflow-y-auto rounded-xl border border-white/10 bg-background p-1.5 space-y-0.5 mb-3">
+              {categories.length === 0 ? (
+                <p className="text-xs text-muted px-2 py-1.5">Nema kategorija</p>
+              ) : categories.map(c => (
+                <label key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.categorySlugs.includes(c.slug)}
+                    onChange={() => toggleCategorySlug(c.slug)}
+                    className="w-4 h-4 rounded accent-primary"
+                  />
+                  <span className="text-sm text-text truncate">{c.name}</span>
+                </label>
+              ))}
+            </div>
+
+            <span className="block text-xs font-medium text-text mb-1.5">Pojedinačni proizvodi</span>
+            <input
+              type="text"
+              value={productSearch}
+              onChange={e => setProductSearch(e.target.value)}
+              placeholder="Pretraži proizvode..."
+              className="w-full bg-background border border-white/10 rounded-xl px-3.5 py-2 text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-primary mb-1.5"
+            />
+            <div className="max-h-40 overflow-y-auto rounded-xl border border-white/10 bg-background p-1.5 space-y-0.5">
+              {filteredProducts.length === 0 ? (
+                <p className="text-xs text-muted px-2 py-1.5">Nema proizvoda</p>
+              ) : filteredProducts.map(p => (
+                <label key={p.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!p.id && formData.productIds.includes(p.id)}
+                    onChange={() => p.id && toggleProductId(p.id)}
+                    className="w-4 h-4 rounded accent-primary"
+                  />
+                  <span className="text-sm text-text truncate flex-1">{p.name}</span>
+                  <span className="text-[11px] text-muted shrink-0">{p.category}</span>
+                </label>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted mt-1.5">
+              Odabrano: {formData.productIds.length} proizvoda, {formData.categorySlugs.length} kategorija
+            </p>
           </div>
 
           <label className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${

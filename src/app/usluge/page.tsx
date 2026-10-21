@@ -1,19 +1,15 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ChevronLeft, Wrench, Package, Headphones, Truck } from 'lucide-react'
+import { ChevronLeft, ShoppingBag, Package, Headphones, Truck } from 'lucide-react'
+import CompanyInfo from '@/components/CompanyInfo'
 
 export const metadata: Metadata = {
   title: 'Usluge | ELESONIC',
-  description: 'Usluge ELESONIC prodavnice - servis, posebne narudžbe, dostava i tehnička podrška.',
+  description: 'Usluge ELESONIC prodavnice - posebne narudžbe, dostava i tehnička podrška.',
   alternates: { canonical: 'https://easygo.ba/usluge' },
 }
 
 const services = [
-  {
-    icon: Wrench,
-    title: 'Servis uređaja',
-    description: 'Ovlašteni servis i stručna podrška za vaše uređaje. Dijagnostika, popravka i savjeti stručnjaka.',
-  },
   {
     icon: Package,
     title: 'Posebne narudžbe',
@@ -55,11 +51,11 @@ export default function UslugePage() {
           {/* Hero */}
           <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-6 lg:p-8 border border-primary/20 text-center">
             <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
-              <Wrench className="w-8 h-8 text-primary" />
+              <ShoppingBag className="w-8 h-8 text-primary" />
             </div>
             <h2 className="text-lg font-bold text-text mb-3">Usluge ELESONIC prodavnice</h2>
             <p className="text-sm text-muted leading-relaxed max-w-lg mx-auto">
-              Više od prodaje — nudimo kompletan servis i podršku za sve vaše potrebe.
+              Uz prodaju uređaja nudimo posebne narudžbe, dostavu i tehničku podršku za sve vaše potrebe.
             </p>
           </div>
 
@@ -78,11 +74,13 @@ export default function UslugePage() {
             </div>
           ))}
 
+          <CompanyInfo />
+
           {/* CTA */}
           <div className="bg-surface rounded-2xl p-5 lg:p-6 border border-white/5 text-center">
             <p className="text-sm text-muted mb-4">Imate pitanje o našim uslugama?</p>
             <Link
-              href="/kontakt"
+              href="/contact"
               className="inline-block px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
             >
               Kontaktirajte nas

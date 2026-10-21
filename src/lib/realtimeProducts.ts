@@ -47,6 +47,10 @@ export interface Product {
   image: string
   images?: string[]
   videoUrl?: string
+  /** Link na video uputstvo (kartica "Video vodič" na stranici proizvoda) */
+  guideVideoUrl?: string
+  guideTitle?: string
+  guideDescription?: string
   description: string
   rating: number
   reviews: number
@@ -138,6 +142,8 @@ export interface Order {
   seen: boolean
   createdAt: number
   updatedAt?: number
+  /** Kada je poslana automatska potvrda narudžbe emailom. */
+  confirmationEmailSentAt?: number
 }
 
 export interface ProductView {
@@ -686,7 +692,7 @@ export interface Banner {
   active?: boolean
   /** Gdje se baner prikazuje: 'hero' (slajder na vrhu) ili 'promo' (reklamni ispod). Stari zapisi bez tipa = 'promo'. */
   type?: BannerType
-  /** Redoslijed prikazivanja (manji broj = ranije). Hero slajder sortira po ovom polju. */
+  /** Redoslijed prikazivanja (manji broj = ranije). Hero slajder i reklamni baneri sortiraju po ovom polju (0 = lijevi baner). */
   order?: number
   createdAt?: number
   updatedAt?: number
@@ -839,8 +845,32 @@ export interface UpsellItem {
   active: boolean
   /** Redoslijed prikazivanja (manji broj = ranije). */
   sortOrder?: number
+  /** ID-evi proizvoda uz koje se stavka nudi. Prazno = bez ograničenja. */
+  productIds?: string[]
+  /** Slugovi kategorija uz koje se stavka nudi. Prazno = bez ograničenja. */
+  categorySlugs?: string[]
   createdAt?: number
   updatedAt?: number
+}
+
+export interface UpsellTarget {
+  productIds?: string[]
+  categorySlugs?: string[]
+}
+
+/**
+ * Up-sell stavka se prikazuje ako nema ograničenja (nudi se uz sve),
+ * ili ako se poklapa s barem jednim proizvodom/kategorijom iz korpe.
+ */
+export const matchesUpsellTarget = (item: UpsellItem, target?: UpsellTarget): boolean => {
+  const productIds = item.productIds ?? []
+  const categorySlugs = item.categorySlugs ?? []
+  if (productIds.length === 0 && categorySlugs.length === 0) return true
+  if (!target) return false
+  return (
+    (target.productIds ?? []).some(id => productIds.includes(id)) ||
+    (target.categorySlugs ?? []).some(slug => categorySlugs.includes(slug))
+  )
 }
 
 export const getUpsellItems = async (): Promise<UpsellItem[]> => {
@@ -858,7 +888,12 @@ export const getUpsellItems = async (): Promise<UpsellItem[]> => {
 export const addUpsellItem = async (item: Omit<UpsellItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
   const db = getFirebaseRealtimeDb()
   if (!db) throw new Error('Database not initialized')
-  const cleanItem = deepCleanUndefined(item)
+  const { productIds, categorySlugs, ...rest } = item
+  const cleanItem = deepCleanUndefined({
+    ...rest,
+    ...(productIds?.length ? { productIds } : {}),
+    ...(categorySlugs?.length ? { categorySlugs } : {}),
+  })
   const newRef = push(ref(db, 'upsellItems'))
   await set(newRef, {
     ...(cleanItem as Record<string, unknown>),
@@ -871,11 +906,13 @@ export const addUpsellItem = async (item: Omit<UpsellItem, 'id' | 'createdAt' | 
 export const updateUpsellItem = async (id: string, item: Partial<UpsellItem>): Promise<void> => {
   const db = getFirebaseRealtimeDb()
   if (!db) throw new Error('Database not initialized')
-  const cleanItem = deepCleanUndefined(item)
-  await update(ref(db, `upsellItems/${id}`), {
-    ...(cleanItem as Record<string, unknown>),
-    updatedAt: Date.now()
-  })
+  const { productIds, categorySlugs, ...rest } = item
+  const cleanItem = deepCleanUndefined(rest) as Record<string, unknown>
+  const payload: Record<string, unknown> = { ...cleanItem, updatedAt: Date.now() }
+  // `null` uklanja polje; prazan niz bi RTDB mogao ignorisati.
+  if (productIds !== undefined) payload.productIds = productIds.length ? productIds : null
+  if (categorySlugs !== undefined) payload.categorySlugs = categorySlugs.length ? categorySlugs : null
+  await update(ref(db, `upsellItems/${id}`), payload)
 }
 
 export const deleteUpsellItem = async (id: string): Promise<void> => {

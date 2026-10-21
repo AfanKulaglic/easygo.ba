@@ -3,34 +3,26 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Zap, ChevronRight, Clock, Heart, ShoppingCart, Star } from 'lucide-react'
+import { Zap, ChevronRight, Clock, ShoppingCart, Star } from 'lucide-react'
 import { useFlashDeals } from '@/hooks/useProducts'
 import { useCartStore } from '@/store/cartStore'
 import { Product } from '@/lib/realtimeProducts'
 import { fbPixel } from '@/lib/fbpixel'
+import { flyToCart } from '@/lib/flyToCart'
 import { ProductCardSkeleton } from './Loading'
 
 const isImageUrl = (str: string) => str?.startsWith('http') || str?.startsWith('/') || str?.startsWith('data:')
 
 function FlashDealCard({ product }: { product: Product }) {
-  const [isWishlisted, setIsWishlisted] = useState(false)
   const addToCart = useCartStore((state) => state.addToCart)
-
-  const discount = product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : product.discountPercent || 0
 
   const soldPercent = product.soldPercent || Math.floor(Math.random() * 40 + 50)
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
     addToCart({ id: product.id!, name: product.name, price: product.price, image: product.image })
+    flyToCart(e.currentTarget as HTMLElement, product.image)
     fbPixel.addToCart({ content_ids: [product.id!], content_name: product.name, content_type: 'product', value: product.price, currency: 'BAM' })
-  }
-
-  const handleWishlist = (e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsWishlisted(!isWishlisted)
   }
 
   return (
@@ -40,21 +32,6 @@ function FlashDealCard({ product }: { product: Product }) {
     >
       {/* Image Container */}
       <div className="relative h-32 lg:h-36 bg-white/[0.02] flex items-center justify-center overflow-hidden">
-        {/* Discount Badge */}
-        {discount > 0 && (
-          <div className="absolute top-2 left-2 z-10 bg-danger text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">
-            -{discount}%
-          </div>
-        )}
-
-        {/* Wishlist */}
-        <button 
-          onClick={handleWishlist} 
-          className="absolute top-2 right-2 z-10 p-1.5 rounded-lg bg-surface/80 opacity-0 group-hover:opacity-100 transition-all"
-        >
-          <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-danger text-danger' : 'text-muted'}`} />
-        </button>
-
         {/* Image */}
         {isImageUrl(product.image) ? (
           <Image 

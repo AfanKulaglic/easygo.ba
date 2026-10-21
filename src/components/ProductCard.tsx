@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Heart, ShoppingCart } from 'lucide-react'
+import { ShoppingCart } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
 import { Product } from '@/lib/realtimeProducts'
 import { fbPixel } from '@/lib/fbpixel'
+import { flyToCart } from '@/lib/flyToCart'
 
 interface ProductCardProps {
   product: Product
@@ -18,26 +18,16 @@ interface ProductCardProps {
 const isImageUrl = (str: string) => str?.startsWith('http') || str?.startsWith('/') || str?.startsWith('data:')
 
 export default function ProductCard({ product, variant = 'default', priority = false }: ProductCardProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false)
   const addToCart = useCartStore((state) => state.addToCart)
-
-  const discount = product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : 0
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
     addToCart({ id: product.id!, name: product.name, price: product.price, image: product.image })
+    flyToCart(e.currentTarget as HTMLElement, product.image)
     fbPixel.addToCart({ content_ids: [product.id!], content_name: product.name, content_type: 'product', value: product.price, currency: 'BAM' })
   }
 
-  const handleWishlist = (e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsWishlisted(!isWishlisted)
-  }
-
   const getBadgeText = () => {
-    if (product.discountPercent) return `-${product.discountPercent}%`
     if (product.badge === 'sale') return 'Akcija'
     if (product.badge === 'new') return 'Novo'
     return null
@@ -73,7 +63,6 @@ export default function ProductCard({ product, variant = 'default', priority = f
       <Link href={`/product/${product.slug || product.id}`} className="flex-shrink-0 w-40 lg:w-full bg-surface rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-black/20">
         <div className="relative h-32 lg:h-36 bg-gradient-to-b from-gray-100 to-gray-50 dark:from-white/[0.08] dark:to-white/[0.03] flex items-center justify-center overflow-hidden">
           {renderImage('sm')}
-          {discount > 0 && <span className="absolute top-3 left-3 bg-danger text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-lg z-10 shadow-lg shadow-danger/30">-{discount}%</span>}
         </div>
         <div className="p-4">
           <h3 className="text-sm lg:text-base text-text/90 line-clamp-1 mb-2">{product.name}</h3>
@@ -99,12 +88,9 @@ export default function ProductCard({ product, variant = 'default', priority = f
         {renderImage('md')}
         {badgeText && (
           <span className={`absolute top-3 left-3 text-[10px] font-semibold tracking-wide uppercase px-2.5 py-1 rounded-lg z-10 shadow-lg backdrop-blur-sm ${
-            product.badge === 'sale' || product.discountPercent ? 'bg-danger text-white shadow-danger/30' : 'bg-accent text-white shadow-accent/30'
+            product.badge === 'sale' ? 'bg-danger text-white shadow-danger/30' : 'bg-accent text-white shadow-accent/30'
           }`}>{badgeText}</span>
         )}
-        <button onClick={handleWishlist} className="absolute top-3 right-3 p-2 rounded-full opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all z-10">
-          <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-danger text-danger' : 'text-white/60 hover:text-white'}`} />
-        </button>
       </div>
       <div className="p-4">
         <h3 className="text-sm text-text/90 line-clamp-2 mb-3 leading-relaxed">{product.name}</h3>

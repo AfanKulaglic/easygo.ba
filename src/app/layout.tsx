@@ -10,7 +10,9 @@ import { DataCacheProvider } from '@/context/DataCacheContext'
 import { GlobalLoader } from '@/components/GlobalLoader'
 import { IframeSync } from '@/components/IframeSync'
 import { CartSync } from '@/components/CartSync'
+import { COMPANY } from '@/lib/company'
 import LazyCookieConsent from '@/components/LazyCookieConsent'
+import ContactWidget from '@/components/ContactWidget'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -104,14 +106,28 @@ export default function RootLayout({
               '@context': 'https://schema.org',
               '@type': 'Organization',
               name: 'ELESONIC',
+              legalName: COMPANY.name,
+              taxID: COMPANY.jib,
               url: 'https://easygo.ba',
               logo: 'https://easygo.ba/assets/images/elesonic-favicon.png',
               description: 'Online prodavnica u Bosni i Hercegovini sa brzom dostavom širom BiH.',
               address: {
                 '@type': 'PostalAddress',
+                streetAddress: 'Džemala Bijedića 147',
+                addressLocality: 'Novi Grad, Sarajevo',
+                postalCode: '71000',
                 addressCountry: 'BA',
               },
-              sameAs: [],
+              identifier: {
+                '@type': 'PropertyValue',
+                propertyID: 'MBS',
+                value: COMPANY.mbs,
+              },
+              sameAs: [
+                'https://www.facebook.com/profile.php?id=61569683799611',
+                'https://www.instagram.com/easygo.bih/',
+                'https://www.youtube.com/@easygo-reviews',
+              ],
             }),
           }}
         />
@@ -162,10 +178,11 @@ export default function RootLayout({
               <CartSync />
               <IframeSync />
               <Header />
-              <main className="pt-[180px] lg:pt-[188px] pb-8 flex-1">
+              <main className="pt-[184px] lg:pt-[188px] pb-8 flex-1">
                   {children}
               </main>
               <Footer />
+              <ContactWidget />
               <LazyCookieConsent />
             </GlobalLoader>
           </DataCacheProvider>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Search, Menu, ShoppingCart, Home, MessageCircle, X, TrendingUp, Clock, ArrowLeft, Moon, Sun, Phone, User, LogOut, LogIn, Package, ChevronDown, Truck, ShieldCheck, MapPin, LayoutGrid, Headphones } from 'lucide-react'
+import { Search, Menu, ShoppingCart, Home, MessageCircle, X, TrendingUp, Clock, ArrowLeft, Moon, Sun, Phone, User, LogOut, LogIn, Package, ChevronDown, ChevronRight, Truck, ShieldCheck, MapPin, LayoutGrid, Headphones } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useProducts, useCategories } from '@/hooks/useProducts'
@@ -34,6 +34,8 @@ export default function Header() {
   const [infoDropdown, setInfoDropdown] = useState(false)
   const [userDropdown, setUserDropdown] = useState(false)
   const [searchCatOpen, setSearchCatOpen] = useState(false)
+  const [catSheetOpen, setCatSheetOpen] = useState(false)
+  const [mobileBarCollapsed, setMobileBarCollapsed] = useState(false)
   const catRef = useRef<HTMLDivElement>(null)
   const infoRef = useRef<HTMLDivElement>(null)
   const userRef = useRef<HTMLDivElement>(null)
@@ -121,17 +123,47 @@ export default function Header() {
     setInfoDropdown(false)
     setUserDropdown(false)
     setSearchCatOpen(false)
+    setCatSheetOpen(false)
+    setMobileBarCollapsed(false)
   }, [pathname])
 
-  // Prevent body scroll when menu is open
+  // Hide mobile search + nav row when page is not at the top (only restores at the top)
   useEffect(() => {
-    if (menuOpen) {
+    let ticking = false
+
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        const y = window.scrollY
+        setMobileBarCollapsed((prev) => (y <= 8 ? false : y > 100 ? true : prev))
+        ticking = false
+      })
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Close desktop nav dropdowns when the nav row collapses
+  useEffect(() => {
+    if (mobileBarCollapsed) {
+      setCatDropdown(false)
+      setInfoDropdown(false)
+      setSearchCatOpen(false)
+    }
+  }, [mobileBarCollapsed])
+
+  // Prevent body scroll when menu or categories sheet is open
+  useEffect(() => {
+    if (menuOpen || catSheetOpen) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
     }
     return () => { document.body.style.overflow = '' }
-  }, [menuOpen])
+  }, [menuOpen, catSheetOpen])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -156,6 +188,7 @@ export default function Header() {
   const handleFocus = () => {
     setIsFocused(true)
     setShowResults(true)
+    setCatSheetOpen(false)
   }
 
   const closeSearch = () => {
@@ -395,6 +428,80 @@ export default function Header() {
         </div>
       </div>
 
+      {/* Mobile Categories Overlay */}
+      {catSheetOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-[60] lg:hidden"
+          onClick={() => setCatSheetOpen(false)}
+        />
+      )}
+
+      {/* Mobile Categories Bottom Sheet */}
+      <div
+        aria-hidden={!catSheetOpen}
+        className={`fixed bottom-0 left-0 right-0 z-[70] lg:hidden bg-surface rounded-t-2xl border-t border-white/10 shadow-2xl transform transition-transform duration-300 ease-out ${
+          catSheetOpen ? 'translate-y-0' : 'translate-y-full pointer-events-none'
+        }`}
+      >
+        <div className="max-h-[80vh] overflow-y-auto pb-[env(safe-area-inset-bottom)]">
+          <div className="sticky top-0 bg-surface z-10 px-4 pt-3 pb-3 border-b border-white/10">
+            <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-3" />
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-text">Kategorije</h2>
+              <button
+                onClick={() => setCatSheetOpen(false)}
+                className="p-2 -mr-2 hover:bg-white/5 rounded-xl transition-colors"
+                aria-label="Zatvori kategorije"
+              >
+                <X className="w-5 h-5 text-muted" />
+              </button>
+            </div>
+          </div>
+
+          <div className="p-2">
+            <Link
+              href="/products"
+              onClick={() => setCatSheetOpen(false)}
+              className="flex items-center justify-between px-4 py-3 rounded-xl bg-primary/10 text-primary font-semibold mb-1"
+            >
+              <span className="flex items-center gap-3">
+                <LayoutGrid className="w-5 h-5" />
+                Sve kategorije
+              </span>
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+
+            {categories.map((category) => (
+              <Link
+                key={category.id}
+                href={`/products/category/${category.slug}`}
+                onClick={() => setCatSheetOpen(false)}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-text hover:bg-white/5 transition-colors"
+              >
+                <span className="w-9 h-9 rounded-lg bg-white/5 overflow-hidden flex items-center justify-center text-lg shrink-0">
+                  {category.imageUrl ? (
+                    <img src={category.imageUrl} alt={category.name} className="w-full h-full object-cover" />
+                  ) : (
+                    category.icon
+                  )}
+                </span>
+                <span className="flex-1 font-medium text-sm">{category.name}</span>
+                <ChevronRight className="w-4 h-4 text-muted" />
+              </Link>
+            ))}
+
+            <Link
+              href="/products/category/rasprodaja"
+              onClick={() => setCatSheetOpen(false)}
+              className="flex items-center justify-between px-4 py-3 mt-1 rounded-xl bg-danger/10 text-danger font-medium hover:bg-danger/20 transition-colors"
+            >
+              <span>Rasprodaja</span>
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </div>
+
       <header className="fixed top-0 left-0 right-0 z-50 shadow-sm">
         {/* MOBILNA TRUST TRAKA — ekvivalent desktop RED 0 */}
         <div className={`lg:hidden bg-surface border-b border-white/10 overflow-hidden ${isFocused ? 'hidden' : ''}`}>
@@ -406,7 +513,7 @@ export default function Header() {
             <span className="w-px h-3.5 bg-white/10 shrink-0" />
             <span className="flex items-center gap-1.5 shrink-0">
               <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-              6 mjeseci garancije
+              Garancija na sve proizvode
             </span>
             <span className="w-px h-3.5 bg-white/10 shrink-0" />
             <span className="flex items-center gap-1.5 shrink-0">
@@ -432,7 +539,7 @@ export default function Header() {
               <span className="w-px h-4 bg-white/10" />
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-primary" />
-                6 mjeseci garancije
+                Garancija na sve proizvode
               </span>
               <span className="w-px h-4 bg-white/10" />
               <span className="flex items-center gap-1.5">
@@ -481,7 +588,7 @@ export default function Header() {
                     onFocus={() => { setIsFocused(false); setShowResults(true) }}
                     className="w-full bg-background border border-white/10 rounded-full py-3 pl-12 pr-[136px] xl:pr-[256px] text-sm text-text placeholder:text-muted focus:outline-none focus:border-primary"
                   />
-                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-3">
+                  <div className="absolute right-1.5 inset-y-0 flex items-center gap-3">
                     {/* Sve kategorije (skraćeni izbor) */}
                     <div ref={searchCatRef} className="relative hidden xl:block">
                       <button
@@ -531,10 +638,12 @@ export default function Header() {
 
             {/* Mobile Search — svoj red ispod logoa i dugmadi da se ne preklapa */}
             <div
-              className={`relative z-50 order-3 transition-all duration-200 lg:hidden ${
+              className={`relative z-50 order-3 lg:hidden transition-[max-height,opacity,transform,margin] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                 isFocused
-                  ? 'w-full min-w-0'
-                  : 'w-full min-w-0 mt-1.5'
+                  ? 'w-full min-w-0 max-h-[52px] opacity-100 translate-y-0'
+                  : mobileBarCollapsed
+                    ? 'w-full min-w-0 max-h-0 opacity-0 -translate-y-2 mt-0 overflow-hidden pointer-events-none'
+                    : 'w-full min-w-0 max-h-[52px] opacity-100 translate-y-0 mt-1.5'
               }`}
               ref={searchRef}
             >
@@ -779,7 +888,7 @@ export default function Header() {
                 className="relative flex items-center gap-2 px-2.5 h-10 rounded-lg hover:bg-white/5 transition-colors"
                 aria-label="Korpa"
               >
-                <div className="relative">
+                <div className="relative" data-cart-target>
                   <ShoppingCart className="w-[18px] h-[18px] text-text" />
                   {mounted && (
                     <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 bg-orange-500 rounded-full text-[11px] flex items-center justify-center font-bold text-[#ffffff]">
@@ -792,7 +901,7 @@ export default function Header() {
 
               {/* Mobile burger menu */}
               <button
-                onClick={() => setMenuOpen(true)}
+                onClick={() => { setMenuOpen(true); setCatSheetOpen(false) }}
                 className="p-2 hover:bg-white/10 rounded-lg transition-colors lg:hidden"
                 aria-label="Menu"
               >
@@ -803,11 +912,23 @@ export default function Header() {
         </div>
 
         {/* MOBILNA NAVIGACIJA — ekvivalent desktop RED 2 (kategorije + glavni linkovi) */}
-        <div className={`lg:hidden bg-surface border-b border-white/10 ${isFocused ? 'hidden' : ''}`}>
-          <div className="flex items-center gap-2 px-4 h-11 overflow-x-auto scrollbar-hide">
+        <div
+          className={`lg:hidden bg-surface overflow-hidden border-b transition-[max-height,border-color] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            isFocused
+              ? 'hidden'
+              : mobileBarCollapsed
+                ? 'max-h-0 border-transparent'
+                : 'max-h-[46px] border-white/10'
+          }`}
+        >
+          <div
+            className={`flex items-center gap-2 px-4 h-11 overflow-x-auto scrollbar-hide transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+              mobileBarCollapsed ? '-translate-y-3 opacity-0' : 'translate-y-0 opacity-100'
+            }`}
+          >
             <button
               type="button"
-              onClick={() => setMenuOpen(true)}
+              onClick={() => { setCatSheetOpen(true); setMenuOpen(false) }}
               className="shrink-0 flex items-center gap-1.5 bg-primary hover:opacity-90 text-white text-[12px] font-semibold px-3 h-7 rounded-lg transition-opacity"
             >
               <LayoutGrid className="w-3.5 h-3.5" />
@@ -834,8 +955,18 @@ export default function Header() {
         </div>
 
         {/* RED 2 - kategorije + glavna navigacija */}
-        <div className="hidden lg:block bg-surface border-b border-white/10">
-          <div className="max-w-7xl mx-auto flex items-center gap-10 px-4 lg:px-8 h-16">
+        <div
+          className={`hidden lg:block bg-surface border-b transition-[max-height,border-color] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            mobileBarCollapsed
+              ? 'max-h-0 overflow-hidden border-transparent'
+              : 'max-h-[65px] border-white/10'
+          }`}
+        >
+          <div
+            className={`max-w-7xl mx-auto flex items-center gap-10 px-4 lg:px-8 h-16 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+              mobileBarCollapsed ? '-translate-y-3 opacity-0' : 'translate-y-0 opacity-100'
+            }`}
+          >
             {/* Sve kategorije dugme + mega dropdown */}
             <div ref={catRef} className="relative h-full flex items-center">
               <button

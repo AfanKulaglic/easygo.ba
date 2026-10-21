@@ -1,15 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, Package, MapPin, Phone, Mail, User, AlertCircle, CheckCircle, Truck } from 'lucide-react'
 import Link from 'next/link'
 import { useCartStore } from '@/store/cartStore'
 import { addOrder } from '@/lib/realtimeProducts'
 import { getGuestDeviceId, calculatePromoDiscount, type UpsellItem } from '@/lib/realtimeProducts'
+import { sendOrderConfirmationEmail } from '@/lib/orderEmail'
 import { useAuth } from '@/context/AuthContext'
 import { fbPixel } from '@/lib/fbpixel'
 import { usePromoCodes, useUpsellItems } from '@/hooks/useCheckoutExtras'
+import { useProducts } from '@/hooks/useProducts'
 import { UpsellSection, PromoSection } from '@/components/checkout/CheckoutExtras'
 
 export default function CartCheckoutPage() {
@@ -36,7 +38,18 @@ export default function CartCheckoutPage() {
 
   // Up-sell i promo kod
   const promoCodes = usePromoCodes()
-  const upsellItems = useUpsellItems()
+  const { products } = useProducts()
+  const upsellTarget = useMemo(() => {
+    const productIds = items.map(i => i.id)
+    const categorySlugs = Array.from(new Set(
+      products
+        .filter(p => p.id && productIds.includes(p.id))
+        .map(p => p.categorySlug)
+        .filter(Boolean)
+    ))
+    return { productIds, categorySlugs }
+  }, [items, products])
+  const upsellItems = useUpsellItems(upsellTarget)
   const [selectedAddons, setSelectedAddons] = useState<{ id: string; name: string; price: number }[]>([])
   const [appliedPromoCode, setAppliedPromoCode] = useState<string | null>(null)
 
@@ -112,7 +125,7 @@ export default function CartCheckoutPage() {
   const handleConfirmOrder = async () => {
     setIsSubmitting(true)
     try {
-      await addOrder({
+      const orderPayload = {
         userId: user?.uid || undefined,
         guestDeviceId: !user ? getGuestDeviceId() : undefined,
         items: items.map(item => ({
@@ -134,7 +147,9 @@ export default function CartCheckoutPage() {
         customerPhone: formData.phone,
         customerAddress: formData.address,
         customerCity: formData.city
-      })
+      }
+      const orderId = await addOrder(orderPayload)
+      sendOrderConfirmationEmail(orderId)
       // Save order details before clearing cart
       setOrderedItems([...items])
       setOrderedAddons([...selectedAddons])

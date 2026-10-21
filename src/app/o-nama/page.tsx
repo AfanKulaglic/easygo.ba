@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ChevronLeft, Heart, Users, Headphones, TrendingUp, Award } from 'lucide-react'
+import CompanyInfo from '@/components/CompanyInfo'
 
 export const metadata: Metadata = {
   title: 'O nama',
@@ -84,6 +85,8 @@ export default function ONamaPage() {
               Vaše povjerenje od samog osnivanja je naša najveća nagrada i neprekidni podsticaj. Duboko usađena u našoj misiji, posvećenost će nastaviti da nas vodi ka proširenju asortimana proizvoda, unapređenju podrške tokom kupovine i širenju dostupnosti naših usluga. <span className="text-text font-medium">Vaše zadovoljstvo i dalje ostaje naš najviši prioritet.</span>
             </p>
           </div>
+
+          <CompanyInfo />
 
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Phone, Mail, MapPin, Clock, Send, MessageCircle, Facebook, Instagram, Youtube } from 'lucide-react'
 import { addMessage } from '@/lib/realtimeProducts'
+import CompanyInfo from '@/components/CompanyInfo'
 
 export default function ContactPage() {
   const [contactForm, setContactForm] = useState({ name: '', email: '', phone: '', message: '' })
@@ -78,10 +79,10 @@ ${contactForm.message}
                 <Phone className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-text mb-2">Telefon</h3>
-              <a href="tel:+38767123249" className="text-muted hover:text-primary transition-colors text-sm">
+              <a href="tel:+387671235249" className="text-muted hover:text-primary transition-colors text-sm">
                 +387 67 123 5249
               </a>
-              <p className="text-xs text-muted mt-2">Pon - Pet: 09:00 - 17:00</p>
+              <p className="text-xs text-muted mt-2">Pon - Pet: 08:00 - 16:00</p>
             </div>
 
             {/* Email Card */}
@@ -103,9 +104,15 @@ ${contactForm.message}
               </div>
               <h3 className="text-lg font-semibold text-text mb-2">Lokacija</h3>
               <p className="text-muted text-sm">
+                Džemala Bijedića 147
+                <br />
+                Novi Grad, 71000 Sarajevo
+                <br />
                 Bosna i Hercegovina
               </p>
             </div>
+
+            <CompanyInfo />
 
             {/* Working Hours Card */}
             <div className="bg-surface rounded-2xl p-6 border border-white/5">
@@ -116,11 +123,11 @@ ${contactForm.message}
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted">Ponedjeljak - Petak</span>
-                  <span className="text-text font-medium">09:00 - 17:00</span>
+                  <span className="text-text font-medium">08:00 - 16:00</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted">Subota</span>
-                  <span className="text-text font-medium">10:00 - 14:00</span>
+                  <span className="text-danger font-medium">Zatvoreno</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted">Nedjelja</span>
@@ -247,7 +254,8 @@ ${contactForm.message}
             <div className="bg-surface rounded-2xl overflow-hidden border border-white/5">
               <div className="aspect-video w-full">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2876.2345678901234!2d18.413029!3d43.856430!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4758c8d4c3e3e3e3%3A0x1234567890abcdef!2sStup%2C%20Sarajevo%2C%20Bosnia%20and%20Herzegovina!5e0!3m2!1sen!2sba!4v1234567890"
+                  src="https://maps.google.com/maps?q=D%C5%BEemala%20Bijedi%C4%87a%20147%2C%20Sarajevo%2071000&z=15&output=embed"
+                  title="Lokacija ELESONIC - Džemala Bijedića 147, Sarajevo"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}

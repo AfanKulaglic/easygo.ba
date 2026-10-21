@@ -1,34 +1,25 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Heart, Plus, Star, ChevronRight, Sparkles } from 'lucide-react'
+import { Plus, Star, ChevronRight, Sparkles } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
 import { useFeaturedProducts } from '@/hooks/useProducts'
 import { Product } from '@/lib/realtimeProducts'
 import { fbPixel } from '@/lib/fbpixel'
+import { flyToCart } from '@/lib/flyToCart'
 import { ProductGridSkeleton } from './Loading'
 
 const isImageUrl = (str: string) => str?.startsWith('http') || str?.startsWith('/') || str?.startsWith('data:')
 
 export default function FeaturedProducts() {
-  const [wishlisted, setWishlisted] = useState<Set<string>>(new Set())
   const addToCart = useCartStore((state) => state.addToCart)
   const { featured: featuredProducts, loading } = useFeaturedProducts(6)
-
-  const toggleWishlist = (e: React.MouseEvent, id: string) => {
-    e.preventDefault()
-    setWishlisted(prev => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
-  }
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.preventDefault()
     addToCart({ id: product.id!, name: product.name, price: product.price, image: product.image })
+    flyToCart(e.currentTarget as HTMLElement, product.image)
     fbPixel.addToCart({ content_ids: [product.id!], content_name: product.name, content_type: 'product', value: product.price, currency: 'BAM' })
   }
 
@@ -37,7 +28,6 @@ export default function FeaturedProducts() {
   ))
 
   const getBadgeStyle = (product: Product) => {
-    if (product.discountPercent) return { text: `-${product.discountPercent}%`, className: 'bg-gradient-to-r from-danger to-red-600' }
     if (product.badge === 'sale') return { text: 'Akcija', className: 'bg-gradient-to-r from-danger to-red-600' }
     if (product.badge === 'new') return { text: 'Novo', className: 'bg-gradient-to-r from-accent to-emerald-500' }
     return null
@@ -109,14 +99,6 @@ export default function FeaturedProducts() {
                   </span>
                 )}
                 
-                {/* Wishlist Button */}
-                <button 
-                  onClick={(e) => toggleWishlist(e, product.id!)} 
-                  className="absolute top-3 right-3 p-2 bg-black/30 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-black/50 hover:scale-110"
-                >
-                  <Heart className={`w-4 h-4 ${wishlisted.has(product.id!) ? 'fill-danger text-danger' : 'text-white'}`} />
-                </button>
-
                 {/* Quick Add Overlay */}
                 <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3">
                   <button 

@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useProductById } from '@/hooks/useProducts'
 import { addOrder } from '@/lib/realtimeProducts'
 import { getGuestDeviceId, calculatePromoDiscount, type UpsellItem } from '@/lib/realtimeProducts'
+import { sendOrderConfirmationEmail } from '@/lib/orderEmail'
 import { useAuth } from '@/context/AuthContext'
 import { fbPixel } from '@/lib/fbpixel'
 import { usePromoCodes, useUpsellItems } from '@/hooks/useCheckoutExtras'
@@ -46,7 +47,14 @@ export default function CheckoutPage() {
 
   // Up-sell i promo kod
   const promoCodes = usePromoCodes()
-  const upsellItems = useUpsellItems()
+  const upsellItems = useUpsellItems(
+    product
+      ? {
+          productIds: product.id ? [product.id] : [],
+          categorySlugs: product.categorySlug ? [product.categorySlug] : [],
+        }
+      : undefined
+  )
   const [selectedAddons, setSelectedAddons] = useState<{ id: string; name: string; price: number }[]>([])
   const [appliedPromoCode, setAppliedPromoCode] = useState<string | null>(null)
 
@@ -142,7 +150,7 @@ export default function CheckoutPage() {
   const handleConfirmOrder = async () => {
     setIsSubmitting(true)
     try {
-      await addOrder({
+      const orderPayload = {
         userId: user?.uid || undefined,
         guestDeviceId: !user ? getGuestDeviceId() : undefined,
         items: [{
@@ -165,7 +173,9 @@ export default function CheckoutPage() {
         customerPhone: formData.phone,
         customerAddress: formData.address,
         customerCity: formData.city
-      })
+      }
+      const orderId = await addOrder(orderPayload)
+      sendOrderConfirmationEmail(orderId)
       // Meta Pixel: Purchase
       fbPixel.purchase({
         value: finalTotal,

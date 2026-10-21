@@ -23,7 +23,7 @@ const posts = [
   },
   {
     icon: Wrench,
-    title: 'Savjeti za servis i održavanje',
+    title: 'Savjeti za održavanje uređaja',
     excerpt: 'Kako produžiti životni vijek vaših uređaja — praktični savjeti našeg tima.',
     href: '/usluge',
   },

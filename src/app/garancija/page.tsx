@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ChevronLeft, Shield, CheckCircle, XCircle, Package, Phone, Mail } from 'lucide-react'
+import CompanyInfo from '@/components/CompanyInfo'
 
 export const metadata: Metadata = {
   title: 'Garancija',
@@ -89,6 +90,8 @@ export default function GarancijaPage() {
             </div>
           </div>
 
+          <CompanyInfo />
+
           {/* Kontakt */}
           <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-5 lg:p-6 border border-primary/20">
             <h2 className="text-base font-semibold text-text mb-4">Kontakt za garanciju</h2>
@@ -100,7 +103,7 @@ export default function GarancijaPage() {
                 </div>
                 podrska@easygo.ba
               </a>
-              <a href="tel:+38767123524" className="flex items-center gap-3 text-sm text-muted hover:text-primary transition-colors">
+              <a href="tel:+387671235249" className="flex items-center gap-3 text-sm text-muted hover:text-primary transition-colors">
                 <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center">
                   <Phone className="w-4 h-4 text-primary" />
                 </div>

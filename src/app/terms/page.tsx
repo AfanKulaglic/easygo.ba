@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ChevronLeft, FileText, ShoppingCart, Ban, RotateCcw, Scale, AlertTriangle, Mail } from 'lucide-react'
+import CompanyInfo from '@/components/CompanyInfo'
 
 export const metadata: Metadata = {
   title: 'Uslovi korištenja',
@@ -28,6 +29,8 @@ export default function TermsPage() {
         </div>
 
         <div className="space-y-6">
+
+          <CompanyInfo />
 
           {/* Opći uslovi */}
           <div className="bg-surface rounded-2xl p-5 lg:p-6 border border-white/5">

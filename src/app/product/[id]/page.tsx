@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
-import { Heart, ChevronLeft, Check, Plus, Star, ChevronRight, ShoppingCart, Share2, Shield, ShieldCheck, Truck, Play, X, Clock, Package, Eye, Sun, BatteryCharging, Moon, Droplets, RotateCw, MessageCircle, Video, Radar, Wifi, HardDrive, Camera, Bell, Zap, Flame, Banknote } from 'lucide-react'
+import { ChevronLeft, Check, Plus, Star, ChevronRight, ShoppingCart, Share2, Shield, ShieldCheck, Truck, Play, X, Clock, Package, Eye, Sun, BatteryCharging, Moon, Droplets, RotateCw, MessageCircle, Video, Radar, Wifi, HardDrive, Camera, Bell, Zap, Flame, Banknote } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useCartStore } from '@/store/cartStore'
@@ -11,6 +11,7 @@ import { useProductBySlug, useProducts } from '@/hooks/useProducts'
 import { Product, updateProduct, trackProductView } from '@/lib/realtimeProducts'
 import { trackRecentProduct, trackPageView, trackInterest } from '@/lib/cookieManager'
 import { fbPixel } from '@/lib/fbpixel'
+import { flyToCart } from '@/lib/flyToCart'
 
 const avatarEmojis = ['👤', '👨', '👩', '🧑', '👴', '👵', '👦', '👧', '🧔', '👱', '👩‍🦰', '👨‍🦰', '👩‍🦱', '👨‍🦱', '🧑‍🦳', '👩‍🦳']
 
@@ -55,47 +56,45 @@ function ScarcityPanel({ stock, viewersBase, soldPercent }: { stock?: number; vi
   const [h, m, s] = countdown.split(':')
 
   return (
-    <div className="mb-3 bg-gradient-to-br from-danger/10 via-surface to-orange-500/5 rounded-2xl border border-danger/30 overflow-hidden shadow-lg shadow-danger/10 ring-1 ring-white/5">
+    <div className="mb-3 bg-surface bg-gradient-to-br from-red-500/10 via-transparent to-orange-500/10 rounded-2xl border !border-red-500/25 overflow-hidden !shadow-none ring-1 ring-red-500/10">
       {typeof soldPercent === 'number' && soldPercent > 0 && (
         <div className="px-4 pt-3">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-sm font-bold text-danger flex items-center gap-1.5">
+            <span className="text-sm font-bold text-red-600 flex items-center gap-1.5">
               <Flame className="w-4 h-4" />
               Rasprodaja
             </span>
-            <span className="text-sm text-danger font-semibold">{Math.min(100, soldPercent)}% prodano</span>
+            <span className="text-sm text-red-600 font-semibold">{Math.min(100, soldPercent)}% prodano</span>
           </div>
-          <div className="h-2 bg-danger/20 rounded-full overflow-hidden mb-2.5">
-            <div className="h-full bg-danger rounded-full transition-all" style={{ width: `${Math.min(100, soldPercent)}%` }} />
+          <div className="h-2 bg-red-500/15 rounded-full overflow-hidden mb-2.5">
+            <div className="h-full bg-red-500 rounded-full transition-all" style={{ width: `${Math.min(100, soldPercent)}%` }} />
           </div>
         </div>
       )}
       {showStock && (
-        <div className="flex items-center gap-2.5 px-4 py-2 border-b border-white/5">
-          <Package className="w-4 h-4 text-orange-400 shrink-0" />
+        <div className="flex items-center gap-2.5 px-4 py-2 border-b border-red-500/15">
+          <Package className="w-4 h-4 text-orange-600 shrink-0" />
           <span className="text-sm text-muted">
-            Ostalo još samo <span className="font-extrabold text-orange-400 text-base">{stock}</span> <span className="font-semibold text-orange-400">{stock === 1 ? 'komad' : 'komada'}</span> na stanju!
+            Ostalo još samo <span className="font-extrabold text-orange-600 text-base">{stock}</span> <span className="font-semibold text-orange-600">{stock === 1 ? 'komad' : 'komada'}</span> na stanju!
           </span>
         </div>
       )}
       <div className="flex items-center gap-2.5 px-4 py-2">
-        <span className="relative flex shrink-0">
-          <span className="absolute inset-0 rounded-full bg-danger/40 animate-ping" />
-          <Clock className="w-4 h-4 text-danger relative" />
+        <span className="flex shrink-0">
+          <Clock className="w-4 h-4 text-red-600" />
         </span>
-        <span className="text-xs font-bold text-danger uppercase tracking-wide shrink-0">Akcija ističe za:</span>
-        <span className="flex items-center gap-1 font-mono font-extrabold text-danger tabular-nums text-base">
-          <span className="bg-danger/15 rounded-md px-1.5 py-0.5">{h}</span>
-          <span className="text-danger/60">:</span>
-          <span className="bg-danger/15 rounded-md px-1.5 py-0.5">{m}</span>
-          <span className="text-danger/60">:</span>
-          <span className="bg-danger/15 rounded-md px-1.5 py-0.5">{s}</span>
+        <span className="text-xs font-bold text-red-600 uppercase tracking-wide shrink-0">Akcija ističe za:</span>
+        <span className="flex items-center gap-1 font-mono font-extrabold text-red-600 tabular-nums text-base">
+          <span className="bg-red-500/10 rounded-md px-1.5 py-0.5">{h}</span>
+          <span className="text-red-400">:</span>
+          <span className="bg-red-500/10 rounded-md px-1.5 py-0.5">{m}</span>
+          <span className="text-red-400">:</span>
+          <span className="bg-red-500/10 rounded-md px-1.5 py-0.5">{s}</span>
         </span>
       </div>
-      <div className="flex items-center gap-2.5 px-4 py-2 border-t border-white/5">
-        <span className="relative flex shrink-0">
-          <span className="absolute inset-0 rounded-full bg-accent/30 animate-ping" />
-          <Eye className="w-4 h-4 text-accent relative" />
+      <div className="flex items-center gap-2.5 px-4 py-2 border-t border-red-500/15">
+        <span className="flex shrink-0">
+          <Eye className="w-4 h-4 text-emerald-600" />
         </span>
         <span className="text-sm text-muted">
           <span className="font-extrabold text-text text-base">{safeViewers}</span> <span className="font-semibold text-text">osoba</span> trenutno gleda ovaj proizvod
@@ -170,22 +169,36 @@ function FaqSection({ faq }: { faq: { id: string; question: string; answer: stri
   )
 }
 
-function ContactCta() {
+function VideoGuideCard({ url, title, description }: { url: string; title?: string; description?: string }) {
   return (
     <div className="px-5 lg:px-0 pb-4">
-      <div className="bg-surface border border-white/10 rounded-2xl p-5">
-        <p className="text-base font-semibold text-text mb-1">Imaš dodatna pitanja?</p>
-        <p className="text-sm text-muted mb-3">Pozovi nas ili piši na Viber:</p>
-        <a
-          href="viber://chat?number=%2B38767123524"
-          className="inline-flex items-center gap-2 text-orange-400 font-semibold text-base hover:text-orange-300 transition-colors"
-        >
-          <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" xmlns="http://www.w3.org/2000/svg">
-            <path d="M11.975 0C5.375 0 0 5.252 0 11.75c0 3.262 1.324 6.21 3.466 8.35L2.1 24l4.075-1.313A11.97 11.97 0 0011.975 23.5C18.574 23.5 24 18.248 24 11.75S18.574 0 11.975 0zm.025 21.5c-1.716 0-3.32-.46-4.7-1.26L4 21.4l1.207-3.18A9.45 9.45 0 012.5 11.75c0-5.24 4.26-9.5 9.5-9.5s9.5 4.26 9.5 9.5-4.26 9.5-9.5 9.5zm5.25-6.917c-.29-.144-1.713-.842-1.978-.937-.265-.096-.458-.144-.65.144-.193.289-.746.937-.914 1.13-.168.192-.337.216-.626.072-.29-.144-1.222-.45-2.327-1.436-.86-.768-1.44-1.716-1.61-2.005-.169-.29-.018-.447.127-.59.13-.13.29-.337.434-.505.145-.168.193-.29.29-.482.097-.193.048-.361-.024-.505-.072-.144-.65-1.564-.89-2.143-.234-.562-.473-.486-.65-.495l-.553-.01c-.192 0-.505.072-.77.361s-1.01.986-1.01 2.406 1.034 2.79 1.178 2.982c.144.193 2.034 3.105 4.927 4.353.688.297 1.225.474 1.643.607.69.219 1.317.188 1.813.114.553-.083 1.713-.7 1.954-1.375.24-.674.24-1.252.168-1.374-.072-.12-.265-.192-.554-.337z"/>
-          </svg>
-          +387 67 123 5249
-        </a>
-      </div>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="video-guide-card group flex items-center gap-4 lg:gap-5 rounded-2xl border border-white/10 bg-[#0A192F] p-4 lg:p-5 transition-colors hover:border-orange-400/40"
+      >
+        <span className="relative flex h-14 w-14 lg:h-16 lg:w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-lg shadow-orange-500/25">
+          <Play className="h-6 w-6 lg:h-7 lg:w-7 fill-current" />
+          <span className="absolute inset-0 rounded-full ring-1 ring-white/20" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="inline-flex rounded-full bg-orange-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-orange-400">
+            Video vodič
+          </span>
+          <span className="mt-1.5 block text-base lg:text-lg font-semibold leading-snug text-white line-clamp-2">
+            {title || 'Upute za povezivanje i korištenje'}
+          </span>
+          <span className="mt-1 block text-xs lg:text-sm leading-relaxed text-slate-300 line-clamp-2">
+            {description || 'Pogledajte kratki video i saznajte kako proizvod povezati i podesiti — korak po korak.'}
+          </span>
+          <span className="mt-2 inline-flex items-center gap-1.5 text-xs lg:text-sm font-semibold text-orange-400">
+            <Play className="h-3.5 w-3.5 fill-current" />
+            Pogledaj video upute
+          </span>
+        </span>
+        <ChevronRight className="video-guide-chevron h-5 w-5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5" />
+      </a>
     </div>
   )
 }
@@ -230,7 +243,7 @@ export default function ProductPage() {
   const { product, loading } = useProductBySlug(slugOrId)
   const { products } = useProducts()
 
-  const [isWishlisted, setIsWishlisted] = useState(false)
+
   const [quantity, setQuantity] = useState(1)
   const [selectedColor, setSelectedColor] = useState(0)
   const [selectedImage, setSelectedImage] = useState(0)
@@ -333,13 +346,14 @@ export default function ProductPage() {
   const currentImage = allImages[selectedImage] || displayProduct.image
   const hasVideo = !!displayProduct.videoUrl
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e?: React.MouseEvent<HTMLElement>) => {
     const variantLabels = getSelectedVariantLabels()
     const productName = variantLabels ? `${displayProduct.name} (${variantLabels})` : displayProduct.name
     const variantKey = variantLabels || undefined
     for (let i = 0; i < quantity; i++) {
       addToCart({ id: displayProduct.id!, name: productName, price: calculatedPrice, image: displayProduct.image, variantKey })
     }
+    flyToCart(e?.currentTarget ?? null, displayProduct.image)
     // Meta Pixel: AddToCart
     fbPixel.addToCart({
       content_ids: [displayProduct.id!],
@@ -395,10 +409,6 @@ export default function ProductPage() {
   }
 
   const isImageData = (str: string) => str?.startsWith('data:image') || str?.startsWith('http') || str?.startsWith('/')
-
-  const discount = displayProduct.originalPrice 
-    ? Math.round(((displayProduct.originalPrice - displayProduct.price) / displayProduct.originalPrice) * 100)
-    : 0
 
   const nextImage = () => setSelectedImage(prev => (prev + 1) % allImages.length)
   const prevImage = () => setSelectedImage(prev => (prev - 1 + allImages.length) % allImages.length)
@@ -502,24 +512,6 @@ export default function ProductPage() {
             <X className="w-6 h-6 text-white" />
           </button>
           
-          {/* Navigation Arrows */}
-          {allImages.length > 1 && (
-            <>
-              <button 
-                onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-colors z-10"
-              >
-                <ChevronLeft className="w-6 h-6 text-white" />
-              </button>
-              <button 
-                onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-colors z-10"
-              >
-                <ChevronRight className="w-6 h-6 text-white" />
-              </button>
-            </>
-          )}
-
           {/* Image */}
           <div 
             className="max-w-5xl max-h-[85vh] flex items-center justify-center touch-pan-y select-none" 
@@ -605,21 +597,6 @@ export default function ProductPage() {
                   <span className="text-sm font-medium">Video</span>
                 </button>
               )}
-
-              {/* Discount Badge */}
-              {discount > 0 && (
-                <div className={`absolute ${hasVideo ? 'top-16' : 'top-4'} left-4 bg-danger text-white text-sm font-bold px-3 py-1.5 rounded-xl`}>
-                  -{discount}%
-                </div>
-              )}
-
-              {/* Wishlist Button */}
-              <button 
-                onClick={() => setIsWishlisted(!isWishlisted)} 
-                className="absolute top-4 right-4 p-3 bg-background rounded-xl hover:bg-background/90 transition-colors"
-              >
-                <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-danger text-danger' : 'text-muted'}`} />
-              </button>
 
               {/* Kontrole: na mobilu ispod slike, na desktopu ih zamjenjuju strelice pored */}
             </div>
@@ -764,7 +741,7 @@ export default function ProductPage() {
               <div className="flex flex-col items-center gap-1 bg-surface rounded-xl p-2.5 text-center border border-white/5">
                 <Shield className="w-5 h-5 text-primary" />
                 <span className="text-[11px] leading-tight font-semibold text-text">Garancija</span>
-                <span className="text-[11px] leading-tight text-muted">{displayProduct.warrantyText || '6 mjeseci'}</span>
+                <span className="text-[11px] leading-tight text-muted">{displayProduct.warrantyText || 'Prema specifikaciji'}</span>
               </div>
             </div>
 
@@ -1013,8 +990,14 @@ export default function ProductPage() {
           <FaqSection faq={displayProduct.faq} />
         )}
 
-        {/* Contact CTA */}
-        <ContactCta />
+        {/* Video vodič */}
+        {displayProduct.guideVideoUrl && /^https?:\/\//i.test(displayProduct.guideVideoUrl.trim()) && (
+          <VideoGuideCard
+            url={displayProduct.guideVideoUrl.trim()}
+            title={displayProduct.guideTitle}
+            description={displayProduct.guideDescription}
+          />
+        )}
 
         {/* Reviews Section */}
         <div className="mt-12 px-5 lg:px-0">
@@ -1227,7 +1210,7 @@ export default function ProductPage() {
             className="flex-1 flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-orange-500/25 btn-pulse"
           >
             <Zap className="w-4 h-4 fill-white shrink-0" />
-            Naruči odmah
+            Naruči
           </button>
         </div>
       </div>

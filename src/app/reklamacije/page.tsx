@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ChevronLeft, AlertTriangle, Camera, Clock, Phone, Mail, PackageX, CheckCircle, XCircle } from 'lucide-react'
+import CompanyInfo from '@/components/CompanyInfo'
 
 export const metadata: Metadata = {
   title: 'Reklamacije',
@@ -38,7 +39,7 @@ export default function ReklamacijePage() {
               <div>
                 <h2 className="text-base font-semibold text-text mb-1">Rok za prijavu</h2>
                 <p className="text-sm text-muted leading-relaxed">
-                  Molimo da sve primjedbe na proizvod prijaviš unutar <span className="text-text font-medium">7 dana</span> od datuma kupovine.
+                  U skladu sa Zakonom o zaštiti potrošača u BiH, sve primjedbe na proizvod možeš prijaviti u roku od <span className="text-text font-medium">14 dana</span> od dana prijema proizvoda.
                 </p>
               </div>
             </div>
@@ -79,7 +80,7 @@ export default function ReklamacijePage() {
             </div>
             <div className="space-y-3 text-sm text-muted leading-relaxed">
               <p>
-                Direktne troškove vraćanja robe u slučaju povrata snosi kupac. Po isteku roka od <span className="text-text font-medium">7 dana</span> od dana kada je primljena pošiljka, proizvod se više ne može vratiti.
+                Direktne troškove vraćanja robe u slučaju povrata snosi kupac. Po isteku roka od <span className="text-text font-medium">14 dana</span> od dana kada je primljena pošiljka, proizvod se više ne može vratiti.
               </p>
               <p>
                 Po prijemu proizvoda, utvrdiće se da li je proizvod ispravan i neoštećen. Kupac odgovara za neispravnost ili oštećenje proizvoda koji su rezultat neadekvatnog rukovanja proizvodom, tj. kupac je isključivo odgovoran za umanjenu vrijednost proizvoda koja nastane kao posljedica rukovanja robom na način koji nije adekvatan.
@@ -119,6 +120,8 @@ export default function ReklamacijePage() {
             </p>
           </div>
 
+          <CompanyInfo />
+
           {/* Kontakt */}
           <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-5 lg:p-6 border border-primary/20">
             <h2 className="text-base font-semibold text-text mb-4">Prijavi reklamaciju</h2>
@@ -130,7 +133,7 @@ export default function ReklamacijePage() {
                 </div>
                 podrska@easygo.ba
               </a>
-              <a href="tel:+38767123524" className="flex items-center gap-3 text-sm text-muted hover:text-primary transition-colors">
+              <a href="tel:+387671235249" className="flex items-center gap-3 text-sm text-muted hover:text-primary transition-colors">
                 <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center">
                   <Phone className="w-4 h-4 text-primary" />
                 </div>

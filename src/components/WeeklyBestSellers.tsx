@@ -1,32 +1,23 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Heart, Star, ChevronRight, Trophy, ShoppingCart } from 'lucide-react'
+import { Star, ChevronRight, Trophy, ShoppingCart } from 'lucide-react'
 import { useBestSellers } from '@/hooks/useProducts'
 import { useCartStore } from '@/store/cartStore'
 import { fbPixel } from '@/lib/fbpixel'
+import { flyToCart } from '@/lib/flyToCart'
 
 const isImageUrl = (str: string) => str?.startsWith('http') || str?.startsWith('/') || str?.startsWith('data:')
 
 export default function WeeklyBestSellers() {
-  const [wishlisted, setWishlisted] = useState<Set<string>>(new Set())
   const { bestSellers, loading } = useBestSellers(4)
   const addToCart = useCartStore((state) => state.addToCart)
-
-  const toggleWishlist = (e: React.MouseEvent, id: string) => {
-    e.preventDefault()
-    setWishlisted(prev => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
-  }
 
   const handleAddToCart = (e: React.MouseEvent, product: any) => {
     e.preventDefault()
     addToCart({ id: product.id!, name: product.name, price: product.price, image: product.image })
+    flyToCart(e.currentTarget as HTMLElement, product.image)
     fbPixel.addToCart({ content_ids: [product.id!], content_name: product.name, content_type: 'product', value: product.price, currency: 'BAM' })
   }
 
@@ -56,7 +47,7 @@ export default function WeeklyBestSellers() {
           </div>
           <div>
             <h2 className="text-lg lg:text-xl font-bold text-text">Najprodavanije</h2>
-            <p className="text-xs text-muted hidden sm:block">Proizvodi koje kupci najviše vole</p>
+            <p className="text-xs text-muted hidden sm:block">Proizvodi koje kupci najviÅ¡e vole</p>
           </div>
         </div>
         <Link 
@@ -94,12 +85,6 @@ export default function WeeklyBestSellers() {
               ) : (
                 <span className="text-4xl lg:text-5xl transition-transform duration-300 group-hover:scale-110">{product.image}</span>
               )}
-              <button
-                onClick={(e) => toggleWishlist(e, product.id!)}
-                className="absolute top-2 right-2 p-1.5 bg-black/30 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-black/50"
-              >
-                <Heart className={`w-4 h-4 ${wishlisted.has(product.id!) ? 'fill-danger text-danger' : 'text-white'}`} />
-              </button>
             </div>
             
             {/* Content */}

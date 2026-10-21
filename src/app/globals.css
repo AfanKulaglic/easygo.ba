@@ -359,6 +359,26 @@ body {
   color: #FFFFFF !important;
 }
 
+/* Video vodič kartica na stranici proizvoda - tamna u obje teme */
+[data-theme="light"] .video-guide-card {
+  color: #FFFFFF !important;
+}
+[data-theme="light"] .video-guide-card span {
+  color: inherit !important;
+}
+[data-theme="light"] .video-guide-card span.text-white {
+  color: #FFFFFF !important;
+}
+[data-theme="light"] .video-guide-card .text-slate-300 {
+  color: #CBD5E1 !important;
+}
+[data-theme="light"] .video-guide-card .text-orange-400 {
+  color: #FB923C !important;
+}
+[data-theme="light"] .video-guide-card .video-guide-chevron {
+  color: #CBD5E1 !important;
+}
+
 /* Chat page header */
 [data-theme="light"] .bg-primary.pt-8 {
   background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%) !important;
@@ -580,10 +600,9 @@ body {
   background-color: rgba(59, 130, 246, 0.08) !important;
 }
 
-/* Footer */
-[data-theme="light"] footer {
-  background-color: #FFFFFF !important;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+/* Footer je uvijek tamna ploha — zadrži svijetli tekst i u light modu */
+[data-theme="light"] footer .text-white.text-white {
+  color: #FFFFFF !important;
 }
 
 /* ============================================
@@ -643,6 +662,24 @@ body {
   animation: btnPulse 1.8s ease-in-out infinite;
 }
 
+/* Ikona korpe "bump" nakon dodavanja proizvoda */
+@keyframes cartBump {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.28); }
+  65%  { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+.cart-bump {
+  animation: cartBump 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cart-bump {
+    animation: none;
+  }
+}
+
 /* ===== DarkModeToggle v2 (agresivniji dizajn) ===== */
 /* Pozadinski gradient naslova klizi lijevo-desno */
 @keyframes titleShimmer {
@@ -675,3 +712,26 @@ body {
   }
 }
 
+
+/* ===== Viber kontakt widget ===== */
+@keyframes viberPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(115, 96, 242, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(115, 96, 242, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(115, 96, 242, 0);
+  }
+}
+
+.contact-viber-pulse {
+  animation: viberPulse 2.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-viber-pulse {
+    animation: none;
+  }
+}
