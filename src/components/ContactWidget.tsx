@@ -3,8 +3,8 @@
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
-const PHONE_DISPLAY = '+387 67 123 5247'
-const PHONE_DIGITS = '387671235247'
+const PHONE_DISPLAY = '+387 67 123 5249'
+const PHONE_DIGITS = '387671235249'
 const MESSAGE = 'Zdravo, zanima me vaša ponuda.'
 const ENCODED_MESSAGE = encodeURIComponent(MESSAGE)
 
@@ -12,11 +12,11 @@ const ENCODED_MESSAGE = encodeURIComponent(MESSAGE)
 // klik kroz JavaScript jer iOS/Android tada pouzdanije pokreću aplikaciju.
 const WHATSAPP_URL = `https://wa.me/${PHONE_DIGITS}?text=${ENCODED_MESSAGE}`
 
-// Viber prima broj bez plusa. Zakodiran plus (%2B) na nekim iOS/Android
-// verzijama ne otvara chat, pa je primarni format sa samim ciframa.
-const VIBER_URL = `viber://chat?number=${PHONE_DIGITS}`
-const VIBER_URL_PLUS = `viber://chat?number=%2B${PHONE_DIGITS}`
-const VIBER_FORWARD_URL = `viber://forward?text=${ENCODED_MESSAGE}`
+// Viber Business nalog. Ovo je isti link koji Viber generiše na
+// https://viber.me/387671235249 — vodi direktno u business chat sa draftom.
+const VIBER_BUSINESS_ID = 'dde82920-6f16-11f0-ae6c-8205e39ec239'
+const VIBER_URL = `viber://business/chat?account=${VIBER_BUSINESS_ID}&draft=${ENCODED_MESSAGE}`
+const VIBER_WEB_URL = `https://viber.me/${PHONE_DIGITS}?draft=${ENCODED_MESSAGE}`
 
 const VIBER_ANDROID_STORE = 'https://play.google.com/store/apps/details?id=com.viber.voip'
 const VIBER_IOS_STORE = 'https://apps.apple.com/app/viber-messenger/id382617920'
@@ -90,12 +90,6 @@ export default function ContactWidget() {
     beginViberOpen()
   }
 
-  const handleViberRetry = () => {
-    void copyMessage()
-    beginViberOpen()
-    window.location.href = VIBER_URL_PLUS
-  }
-
   const viberStoreUrl = isIosDevice() ? VIBER_IOS_STORE : VIBER_ANDROID_STORE
 
   return (
@@ -136,11 +130,11 @@ export default function ContactWidget() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 id="viber-help-title" className="text-base font-semibold">
-                  Viber chat nije otvoren
+                  Viber Business chat nije otvoren
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-text/70">
-                  Provjeri da je Viber instaliran i ažuriran. Poruka se kopira automatski — ako
-                  nije, kopiraj je ispod i nalijepi u chat sa {PHONE_DISPLAY}.
+                  Provjeri da je Viber instaliran i ažuriran. Ako se aplikacija ne otvori, klikni
+                  na „Otvori Viber Business link“ ispod — poruka je već pripremljena.
                 </p>
               </div>
               <button
@@ -154,13 +148,14 @@ export default function ContactWidget() {
             </div>
 
             <div className="mt-4 grid gap-2">
-              <button
-                type="button"
-                onClick={handleViberRetry}
-                className="rounded-xl bg-[#7360F2] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
+              <a
+                href={VIBER_WEB_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl bg-[#7360F2] px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:brightness-110"
               >
-                Pokušaj ponovo
-              </button>
+                Otvori Viber Business link
+              </a>
               <a
                 href={viberStoreUrl}
                 target="_blank"
@@ -168,12 +163,6 @@ export default function ContactWidget() {
                 className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm font-semibold text-text transition hover:bg-white/10"
               >
                 Ažuriraj / preuzmi Viber
-              </a>
-              <a
-                href={VIBER_FORWARD_URL}
-                className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm font-semibold text-text transition hover:bg-white/10"
-              >
-                Pošalji poruku kroz Viber
               </a>
               <a
                 href={WHATSAPP_URL}

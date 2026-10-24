@@ -120,7 +120,7 @@ const buildHtml = (data: OrderEmailPayload) => {
 
                 <p style="margin:24px 0 0;color:#475569;font-size:13px;line-height:1.7;">
                   Za sva pitanja dostupni smo na <a href="mailto:contact@elesonic.ba" style="color:#ea580c;">contact@elesonic.ba</a>
-                  ili putem Vibera na <strong>+387 67 123 5247</strong>.
+                  ili putem Vibera na <strong>+387 67 123 5249</strong>.
                 </p>
               </td>
             </tr>
@@ -150,7 +150,7 @@ const buildText = (data: OrderEmailPayload) => {
     '',
     `Ukupno: ${money(total)}`,
     '',
-    'Kontakt: contact@elesonic.ba · +387 67 123 5247',
+    'Kontakt: contact@elesonic.ba · +387 67 123 5249',
   ].join('\n')
 }
 
