@@ -1,22 +1,21 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useEffect, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const PHONE_DISPLAY = '+387 67 123 5247'
 const PHONE_DIGITS = '387671235247'
 const MESSAGE = 'Zdravo, zanima me vaša ponuda.'
 const ENCODED_MESSAGE = encodeURIComponent(MESSAGE)
 
-// WhatsApp: https link radi na Androidu, iPhoneu i desktopu. Na mobilnom ga
-// otvaramo u istom tabu jer in-app browseri često blokiraju target="_blank".
-const WHATSAPP_URL = `https://api.whatsapp.com/send/?phone=${PHONE_DIGITS}&text=${ENCODED_MESSAGE}`
+// WhatsApp: koristimo zvanični wa.me link i običan <a> tag. Ne prekidamo
+// klik kroz JavaScript jer iOS/Android tada pouzdanije pokreću aplikaciju.
+const WHATSAPP_URL = `https://wa.me/${PHONE_DIGITS}?text=${ENCODED_MESSAGE}`
 
 // Viber prima broj bez plusa. Zakodiran plus (%2B) na nekim iOS/Android
-// verzijama ne otvara chat, pa je primarni format sa samim ciframa. `text`
-// je best-effort prefill; ako ga Viber ignoriše, poruka je u clipboardu.
-const VIBER_URL = `viber://chat?number=${PHONE_DIGITS}&text=${ENCODED_MESSAGE}`
-const VIBER_URL_PLUS = `viber://chat?number=%2B${PHONE_DIGITS}&text=${ENCODED_MESSAGE}`
+// verzijama ne otvara chat, pa je primarni format sa samim ciframa.
+const VIBER_URL = `viber://chat?number=${PHONE_DIGITS}`
+const VIBER_URL_PLUS = `viber://chat?number=%2B${PHONE_DIGITS}`
 const VIBER_FORWARD_URL = `viber://forward?text=${ENCODED_MESSAGE}`
 
 const VIBER_ANDROID_STORE = 'https://play.google.com/store/apps/details?id=com.viber.voip'
@@ -25,11 +24,6 @@ const VIBER_IOS_STORE = 'https://apps.apple.com/app/viber-messenger/id382617920'
 const isIosDevice = () =>
   typeof navigator !== 'undefined' &&
   (/iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
-
-const isMobileDevice = () =>
-  typeof navigator !== 'undefined' &&
-  (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
 
 function ViberIcon({ className }: { className?: string }) {
@@ -80,35 +74,26 @@ export default function ContactWidget() {
     }
   }
 
-  const openViber = (url: string) => {
+  const beginViberOpen = () => {
     setShowViberHelp(false)
     if (viberTimer.current !== null) window.clearTimeout(viberTimer.current)
 
     viberTimer.current = window.setTimeout(() => {
       if (document.visibilityState === 'visible') setShowViberHelp(true)
-    }, 2500)
-
-    window.location.href = url
+    }, 3000)
   }
 
-  const handleWhatsAppClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (!isMobileDevice()) return
-
-    // Na mobilnom otvaramo u istom tabu. Tako se pouzdanije pokreće
-    // WhatsApp aplikacija, posebno iz in-app browsera.
-    event.preventDefault()
-    window.location.href = WHATSAPP_URL
-  }
-
-  const handleViberClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault()
+  const handleViberClick = () => {
+    // Ne prekidamo klik: <a href="viber://..."> treba sam da pokrene app.
+    // Istovremeno kopiramo poruku i pokrećemo fallback ako se app ne otvori.
     void copyMessage()
-    openViber(VIBER_URL)
+    beginViberOpen()
   }
 
   const handleViberRetry = () => {
     void copyMessage()
-    openViber(VIBER_URL_PLUS)
+    beginViberOpen()
+    window.location.href = VIBER_URL_PLUS
   }
 
   const viberStoreUrl = isIosDevice() ? VIBER_IOS_STORE : VIBER_ANDROID_STORE
@@ -118,9 +103,6 @@ export default function ContactWidget() {
       <div className={`fixed right-4 z-[9990] flex flex-col items-center gap-3 ${stackBottom}`}>
         <a
           href={WHATSAPP_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={handleWhatsAppClick}
           aria-label="Pišite nam na WhatsApp"
           className="group relative flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/25 transition-transform duration-200 hover:scale-105 active:scale-95"
         >
@@ -195,12 +177,6 @@ export default function ContactWidget() {
               </a>
               <a
                 href={WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(event) => {
-                  setShowViberHelp(false)
-                  handleWhatsAppClick(event)
-                }}
                 className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm font-semibold text-text transition hover:bg-white/10"
               >
                 Piši na WhatsApp
