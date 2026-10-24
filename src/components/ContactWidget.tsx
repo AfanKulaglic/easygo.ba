@@ -1,10 +1,36 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { useEffect, useRef, useState, type MouseEvent } from 'react'
 
-const PHONE = '+387671235247'
-const VIBER_URL = `viber://chat?number=${encodeURIComponent(PHONE)}`
-const WHATSAPP_URL = 'https://wa.me/387671235247?text=Zdravo%2C%20zanima%20me%20va%C5%A1a%20ponuda.'
+const PHONE_DISPLAY = '+387 67 123 5247'
+const PHONE_DIGITS = '387671235247'
+const MESSAGE = 'Zdravo, zanima me vaša ponuda.'
+const ENCODED_MESSAGE = encodeURIComponent(MESSAGE)
+
+// WhatsApp: https link radi na Androidu, iPhoneu i desktopu. Na mobilnom ga
+// otvaramo u istom tabu jer in-app browseri često blokiraju target="_blank".
+const WHATSAPP_URL = `https://api.whatsapp.com/send/?phone=${PHONE_DIGITS}&text=${ENCODED_MESSAGE}`
+
+// Viber prima broj bez plusa. Zakodiran plus (%2B) na nekim iOS/Android
+// verzijama ne otvara chat, pa je primarni format sa samim ciframa. `text`
+// je best-effort prefill; ako ga Viber ignoriše, poruka je u clipboardu.
+const VIBER_URL = `viber://chat?number=${PHONE_DIGITS}&text=${ENCODED_MESSAGE}`
+const VIBER_URL_PLUS = `viber://chat?number=%2B${PHONE_DIGITS}&text=${ENCODED_MESSAGE}`
+const VIBER_FORWARD_URL = `viber://forward?text=${ENCODED_MESSAGE}`
+
+const VIBER_ANDROID_STORE = 'https://play.google.com/store/apps/details?id=com.viber.voip'
+const VIBER_IOS_STORE = 'https://apps.apple.com/app/viber-messenger/id382617920'
+
+const isIosDevice = () =>
+  typeof navigator !== 'undefined' &&
+  (/iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
+
+const isMobileDevice = () =>
+  typeof navigator !== 'undefined' &&
+  (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
 
 function ViberIcon({ className }: { className?: string }) {
   return (
@@ -26,35 +52,172 @@ export default function ContactWidget() {
   const pathname = usePathname()
   const isProductPage = pathname.startsWith('/product/')
   const stackBottom = isProductPage ? 'bottom-[7.75rem] lg:bottom-16' : 'bottom-16'
+  const [showViberHelp, setShowViberHelp] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const viberTimer = useRef<number | null>(null)
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        setShowViberHelp(false)
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      if (viberTimer.current !== null) window.clearTimeout(viberTimer.current)
+    }
+  }, [])
+
+  const copyMessage = async () => {
+    try {
+      await navigator.clipboard.writeText(MESSAGE)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2500)
+    } catch {
+      setCopied(false)
+    }
+  }
+
+  const openViber = (url: string) => {
+    setShowViberHelp(false)
+    if (viberTimer.current !== null) window.clearTimeout(viberTimer.current)
+
+    viberTimer.current = window.setTimeout(() => {
+      if (document.visibilityState === 'visible') setShowViberHelp(true)
+    }, 2500)
+
+    window.location.href = url
+  }
+
+  const handleWhatsAppClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!isMobileDevice()) return
+
+    // Na mobilnom otvaramo u istom tabu. Tako se pouzdanije pokreće
+    // WhatsApp aplikacija, posebno iz in-app browsera.
+    event.preventDefault()
+    window.location.href = WHATSAPP_URL
+  }
+
+  const handleViberClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault()
+    void copyMessage()
+    openViber(VIBER_URL)
+  }
+
+  const handleViberRetry = () => {
+    void copyMessage()
+    openViber(VIBER_URL_PLUS)
+  }
+
+  const viberStoreUrl = isIosDevice() ? VIBER_IOS_STORE : VIBER_ANDROID_STORE
 
   return (
-    <div className={`fixed right-4 z-[9990] flex flex-col items-center gap-3 ${stackBottom}`}>
-      <a
-        href={WHATSAPP_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Pišite nam na WhatsApp"
-        className="group relative flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/25 transition-transform duration-200 hover:scale-105 active:scale-95"
-      >
-        <WhatsAppIcon className="h-5 w-5" />
-        <span className="pointer-events-none absolute right-full top-1/2 mr-3 hidden -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-surface px-3 py-1.5 text-xs font-medium text-text opacity-0 shadow-xl transition-opacity duration-200 group-hover:opacity-100 lg:block">
-          Pišite nam na WhatsApp
-        </span>
-      </a>
+    <>
+      <div className={`fixed right-4 z-[9990] flex flex-col items-center gap-3 ${stackBottom}`}>
+        <a
+          href={WHATSAPP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleWhatsAppClick}
+          aria-label="Pišite nam na WhatsApp"
+          className="group relative flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/25 transition-transform duration-200 hover:scale-105 active:scale-95"
+        >
+          <WhatsAppIcon className="h-5 w-5" />
+          <span className="pointer-events-none absolute right-full top-1/2 mr-3 hidden -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-surface px-3 py-1.5 text-xs font-medium text-text opacity-0 shadow-xl transition-opacity duration-200 group-hover:opacity-100 lg:block">
+            Pišite nam na WhatsApp
+          </span>
+        </a>
 
-      <a
-        href={VIBER_URL}
-        aria-label="Kontaktirajte nas putem Vibera"
-        className="contact-viber-pulse group relative flex h-11 w-11 items-center justify-center rounded-full bg-[#7360F2] text-white shadow-lg shadow-black/25 transition-transform duration-200 hover:scale-105 active:scale-95"
-      >
-        <ViberIcon className="h-[19px] w-[19px]" />
-        <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#FF3B30] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-background">
-          1
-        </span>
-        <span className="pointer-events-none absolute right-full top-1/2 mr-3 hidden -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-surface px-3 py-1.5 text-xs font-medium text-text opacity-0 shadow-xl transition-opacity duration-200 group-hover:opacity-100 lg:block">
-          Kontaktirajte nas putem Vibera
-        </span>
-      </a>
-    </div>
+        <a
+          href={VIBER_URL}
+          onClick={handleViberClick}
+          aria-label="Kontaktirajte nas putem Vibera"
+          className="contact-viber-pulse group relative flex h-11 w-11 items-center justify-center rounded-full bg-[#7360F2] text-white shadow-lg shadow-black/25 transition-transform duration-200 hover:scale-105 active:scale-95"
+        >
+          <ViberIcon className="h-[19px] w-[19px]" />
+          <span className="pointer-events-none absolute right-full top-1/2 mr-3 hidden -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-surface px-3 py-1.5 text-xs font-medium text-text opacity-0 shadow-xl transition-opacity duration-200 group-hover:opacity-100 lg:block">
+            Kontaktirajte nas putem Vibera
+          </span>
+        </a>
+      </div>
+
+      {showViberHelp && (
+        <div
+          className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="viber-help-title"
+        >
+          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-surface p-5 text-text shadow-2xl">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 id="viber-help-title" className="text-base font-semibold">
+                  Viber chat nije otvoren
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-text/70">
+                  Provjeri da je Viber instaliran i ažuriran. Poruka se kopira automatski — ako
+                  nije, kopiraj je ispod i nalijepi u chat sa {PHONE_DISPLAY}.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowViberHelp(false)}
+                aria-label="Zatvori"
+                className="-mr-1 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-lg text-text/60 transition hover:bg-white/10 hover:text-text"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mt-4 grid gap-2">
+              <button
+                type="button"
+                onClick={handleViberRetry}
+                className="rounded-xl bg-[#7360F2] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
+              >
+                Pokušaj ponovo
+              </button>
+              <a
+                href={viberStoreUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm font-semibold text-text transition hover:bg-white/10"
+              >
+                Ažuriraj / preuzmi Viber
+              </a>
+              <a
+                href={VIBER_FORWARD_URL}
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm font-semibold text-text transition hover:bg-white/10"
+              >
+                Pošalji poruku kroz Viber
+              </a>
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(event) => {
+                  setShowViberHelp(false)
+                  handleWhatsAppClick(event)
+                }}
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm font-semibold text-text transition hover:bg-white/10"
+              >
+                Piši na WhatsApp
+              </a>
+              <button
+                type="button"
+                onClick={() => void copyMessage()}
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-text transition hover:bg-white/10"
+              >
+                {copied ? 'Poruka kopirana' : 'Kopiraj poruku'}
+              </button>
+            </div>
+
+            <p className="mt-3 text-xs text-text/50">Broj: {PHONE_DISPLAY}</p>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
